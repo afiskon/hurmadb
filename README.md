@@ -8,7 +8,8 @@ Install dependencies required to run tests:
 
 ```
 mkvirtualenv hurmadb
-pip install -r requirements.txt
+virtualenv hurmadb/bin/activate
+pip3 install -r requirements.txt
 ```
 
 Build HurmaDB:

@@ -21,16 +21,15 @@ def hurmadb_stop(pobj):
     """
     Stop HurmaDB process created by hurmadb_start()
     """
-    # subprocess.call(f"kill {pobj.pid}", shell = True)
-    res = requests.put(f'http://localhost:{PORT}/v1/_stop')
-    res = requests.get(f'http://localhost:{PORT}/')
+    res = requests.put('http://localhost:{}/v1/_stop'.format(PORT))
+    res = requests.get('http://localhost:{}/'.format(PORT))
     pobj.wait()
 
 class TestBasic:
     def setup_class(self):
         self.log = logging.getLogger('HurmaDB')
         self.pobj = hurmadb_start(PORT)
-        self.log.debug(f"HurmaDB started on port {PORT}")
+        self.log.debug("HurmaDB started on port {}".format(PORT))
 
     def teardown_class(self):
         hurmadb_stop(self.pobj)
@@ -38,17 +37,17 @@ class TestBasic:
 
     def test_index(self):
         self.log.debug("Running test_index")
-        res = requests.get(f'http://localhost:{PORT}/')
+        res = requests.get('http://localhost:{}/'.format(PORT))
         assert(res.status_code == 200)
 
     def test_not_found(self):
         self.log.debug("Running test_not_found")
-        res = requests.get(f'http://localhost:{PORT}/no-such-page/')
+        res = requests.get('http://localhost:{}/no-such-page/'.format(PORT))
         assert(res.status_code == 404)
 
     def test_kv(self):
         self.log.debug("Running test_kv")
-        url = f'http://localhost:{PORT}/v1/kv/Some_Key-123'
+        url = 'http://localhost:{}/v1/kv/Some_Key-123'.format(PORT)
         doc = {'foo':'bar', 'baz':['qux']}
         # Make sure there is no such document
         res = requests.get(url)

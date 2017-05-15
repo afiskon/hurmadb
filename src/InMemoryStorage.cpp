@@ -11,14 +11,7 @@ InMemoryStorage::InMemoryStorage() {
 }
 
 InMemoryStorage::~InMemoryStorage() {
-    if(pthread_rwlock_destroy(&_rwlock) != 0) {
-        // suppress 'throw will always call terminate() [-Wterminate]' warning
-        // see https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wterminate"
-        throw std::runtime_error("InMemoryStorage::~InMemoryStorage() - pthread_rwlock_destroy() failed");
-        #pragma GCC diagnostic pop
-    }
+    pthread_rwlock_destroy(&_rwlock);
 }
 
 void InMemoryStorage::set(const std::string& key, const std::string& value) {

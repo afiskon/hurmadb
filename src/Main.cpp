@@ -32,7 +32,7 @@ static void httpKVGetHandler(const HttpRequest& req, HttpResponse& resp) {
     const std::string& key = req.getQueryMatch(0);
     const std::string& value = storage.get(key, &found);
     resp.setStatus(found ? HTTP_STATUS_OK : HTTP_STATUS_NOT_FOUND);
-    resp.setBody(storage.get(req.getQueryMatch(0)));
+    resp.setBody(value);
 }
 
 static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {

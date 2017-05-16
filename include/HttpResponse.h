@@ -44,9 +44,9 @@ class HttpResponse {
         void setBody(const std::string& body);
         const std::string& getBody() const;
 
-        // TODO: split to addHeader and getHeaders, with move semantics, perfect forwarding and stuff
-        // see https://www.codeproject.com/Articles/397492/Move-Semantics-and-Perfect-Forwarding-in-Cplusplus
-        std::map< std::string, std::string >& headers();
+        const std::map< std::string, std::string >& getHeaders();
+        void emplaceHeader(std::string&& name, std::string&& value);
+        bool headerDefined(const std::string& name);
 
         HttpResponse(HttpResponse const &) = delete;
         void operator=(HttpResponse const &) = delete;

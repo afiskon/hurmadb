@@ -45,7 +45,15 @@ void HttpResponse::setStatus(const HttpStatus& status) {
     _httpStatus = status;
 }
 
-std::map< std::string, std::string >& HttpResponse::headers() {
+bool HttpResponse::headerDefined(const std::string& name) {
+    return _headers.find(name) != _headers.end();
+}
+
+void HttpResponse::emplaceHeader(std::string&& name, std::string&& value) {
+    _headers.emplace(std::make_pair(name, value));
+}
+
+const std::map< std::string, std::string >& HttpResponse::getHeaders() {
     return _headers;
 }
 

@@ -146,14 +146,13 @@ void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse
     snprintf(codeAndDescr, sizeof(codeAndDescr), "HTTP/1.1 %3u %s\r\n", httpStatus.getCode(), httpStatus.getDescr());
     socket.write(codeAndDescr, strlen(codeAndDescr));
 
-    auto headers = resp.headers();
-    if(headers.find("Connection") == headers.end())
-        headers.emplace(std::make_pair("Connection", "close")); /* here is why HttpResponse is not `const` */
+    if(!resp.headerDefined("Connection"))
+        resp.emplaceHeader("Connection", "close"); /* here is why HttpResponse is not `const` */
 
-    if(headers.find("Content-Length") == headers.end())
-        headers.emplace(std::make_pair("Content-Length", std::to_string(resp.getBody().size())));
+    if(!resp.headerDefined("Content-Length"))
+        resp.emplaceHeader("Content-Length", std::to_string(resp.getBody().size()));
 
-    for(auto const &entry: headers) {
+    for(auto const &entry: resp.getHeaders()) {
         static const std::string headerSplitter(": ");
         socket.write(entry.first);
         socket.write(headerSplitter);

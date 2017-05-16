@@ -41,8 +41,6 @@ class HttpResponse {
         const HttpStatus& getStatus() const;
         void setStatus(const HttpStatus& status);
 
-        // TODO: use move semantics, perfect forwarding and stuff
-        // see https://www.codeproject.com/Articles/397492/Move-Semantics-and-Perfect-Forwarding-in-Cplusplus
         void setBody(const std::string& body);
         const std::string& getBody() const;
 

@@ -9,6 +9,7 @@
 //#include <InMemoryStorage.h>
 #include <PersistentStorage.h>
 
+// TODO: plugable porotols, e.g. support Memcached protocol
 // TODO: describe REST API in README.md or API.md
 // TODO: support rangescans
 // TODO: support _rev in ::set, ::delete

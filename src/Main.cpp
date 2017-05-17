@@ -86,7 +86,8 @@ int main(int argc, char** argv) {
         bool term = terminate;
         pthread_mutex_unlock(&terminate_lock);
         if(term) break;
+        // TODO: There is a race condition here. HttpServer should kill (and/or wait for) all running workers in it's destructor.
         server.accept();
     }
-    pthread_exit(nullptr);
+    return 0;
 }

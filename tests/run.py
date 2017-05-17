@@ -7,6 +7,7 @@ import random
 import subprocess
 import requests
 import logging
+import time
 
 PORT = 8000 + int(random.random()*1000)
 logging.basicConfig(level=logging.WARNING)
@@ -21,14 +22,20 @@ def hurmadb_stop(pobj):
     """
     Stop HurmaDB process created by hurmadb_start()
     """
-    res = requests.put('http://localhost:{}/v1/_stop'.format(PORT))
-    res = requests.get('http://localhost:{}/'.format(PORT))
+    requests.put('http://localhost:{}/v1/_stop'.format(PORT))
+
+    try:
+        requests.get('http://localhost:{}/'.format(PORT))
+    except:
+        pass
+
     pobj.wait()
 
 class TestBasic:
     def setup_class(self):
         self.log = logging.getLogger('HurmaDB')
         self.pobj = hurmadb_start(PORT)
+        time.sleep(3) # Give RocksDB some time to initialize
         self.log.debug("HurmaDB started on port {}".format(PORT))
 
     def teardown_class(self):
@@ -66,5 +73,5 @@ class TestBasic:
         res = requests.get(url)
         assert(res.status_code == 404)
         res = requests.delete(url)
-        assert(res.status_code == 404)
-
+        # InMemory backend returns 404, RocksDB backend always returns 200
+        assert(res.status_code == 200 or res.status_code == 404)

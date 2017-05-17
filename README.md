@@ -7,7 +7,7 @@ Work in progress.
 Install all dependencies:
 
 ```
-sudo apt-get install g++ libpcre3-dev cmake python3-pip lcov wrk
+sudo apt-get install cmake g++ libpcre3-dev librocksdb-dev python3-pip lcov wrk
 ```
 
 Install and configure virtualenvwrapper:

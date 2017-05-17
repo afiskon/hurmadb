@@ -15,7 +15,7 @@ PersistentStorage::PersistentStorage() {
     options.OptimizeLevelStyleCompaction();
     options.create_if_missing = true;
 
-    Status s = rocksdb::DB::Open(options, "/tmp/hurma_data", &_db);
+    Status s = rocksdb::DB::Open(options, "hurma_data", &_db);
     if(!s.ok())
         throw std::runtime_error("PersistentStorage::PersistentStorage() - DB::Open failed");
 }

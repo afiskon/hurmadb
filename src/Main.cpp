@@ -6,8 +6,8 @@
 #include <iostream>
 #include <signal.h>
 #include <HttpServer.h>
-#include <InMemoryStorage.h>
-// #include <PersistentStorage.h>
+//#include <InMemoryStorage.h>
+#include <PersistentStorage.h>
 
 // TODO: describe REST API in README.md or API.md
 // TODO: support rangescans
@@ -19,8 +19,8 @@
 
 // TODO: Keyspaces class
 
-InMemoryStorage storage;
-// PersistentStorage storage;
+//InMemoryStorage storage;
+PersistentStorage storage;
 
 pthread_mutex_t terminate_lock;
 static bool terminate = false;

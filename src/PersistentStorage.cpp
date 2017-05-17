@@ -11,8 +11,8 @@ PersistentStorage::PersistentStorage() {
 
     Options options;
 
-//    options.IncreaseParallelism();
-//    options.OptimizeLevelStyleCompaction();
+    options.IncreaseParallelism();
+    options.OptimizeLevelStyleCompaction();
     options.create_if_missing = true;
 
     Status s = rocksdb::DB::Open(options, "/tmp/hurma_data", &_db);

@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <string.h>
 #include <pcre.h>
+#include <RegexCache.h>
 #include <HttpServer.h>
 #include <Socket.h>
 #include <defer.h>
@@ -57,22 +58,13 @@ HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList):
     _handlersList(handlersList) {
     }
 
-// TODO: cache compiled regular expressions, use static singleton class
 void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
-    const char* error;
-    int erroroffset;
-    char req_pattern[] = "^(GET|POST|PUT|DELETE) ([^ ?]+)[^ ]* HTTP/1.[01]$";
-    char header_pattern[] = "^([a-zA-Z0-9_-]+):[ ]+(.+)$";
     int mvector[32];
     char buf[256];
 
     /* Step 1 - process query */
     {
-        pcre* req_re = pcre_compile(req_pattern, 0, &error, &erroroffset, nullptr);
-        if(req_re == nullptr)
-            throw std::runtime_error("PCRE compilation failed (request pattern)");
-        defer( pcre_free(req_re) );
-
+        const pcre* req_re = RegexCache::getInstance().getHttpRequestPattern();
         int len = socket.readLine(buf, sizeof(buf));
         int rc = pcre_exec(req_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector)/sizeof(mvector[0]));
         if(rc < 0) /* no match */
@@ -97,11 +89,7 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
 
     /* Step 2 - process headers */
     {
-        pcre* header_re = pcre_compile(header_pattern, 0, &error, &erroroffset, nullptr);
-        if(header_re == nullptr)
-            throw std::runtime_error("PCRE compilation failed(header pattern)");
-        defer( pcre_free(header_re) );
-
+        const pcre* header_re = RegexCache::getInstance().getHttpHeaderPattern();
         for(;;) {
             size_t len = socket.readLine(buf, sizeof(buf));
             if(len == 0) break;

@@ -9,14 +9,18 @@ import requests
 import logging
 import time
 
-PORT = 8000 + int(random.random()*1000)
+START = os.environ.get('HURMADB_PORT') is None
+PORT = os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000))
 logging.basicConfig(level=logging.WARNING)
 
 def hurmadb_start(port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
-    return subprocess.Popen(['./hurmadb', str(port)])
+    if START:
+        return subprocess.Popen(['./hurmadb', str(port)])
+    else:
+        return None
 
 def hurmadb_stop(pobj):
     """
@@ -29,7 +33,8 @@ def hurmadb_stop(pobj):
     except:
         pass
 
-    pobj.wait()
+    if START:
+        pobj.wait()
 
 class TestBasic:
     def setup_class(self):

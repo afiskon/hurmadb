@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include <map>
+#include <sstream>
 #include <iostream>
 #include <atomic>
 #include <signal.h>
@@ -28,7 +29,10 @@ static std::atomic_bool terminate_flag(false);
 
 static void httpIndexGetHandler(const HttpRequest&, HttpResponse& resp) {
     resp.setStatus(HTTP_STATUS_OK);
-    resp.setBody("This is HurmaDB!\n\n");
+
+    std::ostringstream oss;
+    oss << "HurmaDB is " << (terminate_flag.load() ? "terminating" : "running" ) << "!\n\n";
+    resp.setBody(oss.str());
 }
 
 static void httpKVGetHandler(const HttpRequest& req, HttpResponse& resp) {
@@ -79,7 +83,10 @@ int main(int argc, char** argv) {
     server.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
 
     server.listen("127.0.0.1", port);
-    while(server.accept(terminate_flag)) {}
+
+    while(!terminate_flag.load()) {
+        server.accept();
+    }
 
     return 0;
 }

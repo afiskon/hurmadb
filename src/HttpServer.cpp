@@ -45,16 +45,16 @@ static void _httpNotFoundHandler(const HttpRequest&, HttpResponse& resp) {
 
 static void* _httpWorkerThreadProc(void* rawArg) {
     HttpWorkerThreadProcArg* arg = (HttpWorkerThreadProcArg*)rawArg;
+    std::atomic_int& workersCounter = *arg->workersCounter;
+
+    defer( workersCounter-- ); // already incremented in the parent process
+
     Socket socket(arg->socket);
     HttpWorker worker(socket, arg->handlers);
-    std::atomic_int& workersCounter = *arg->workersCounter;
     delete arg;
 
     /* No other thread is going to join() this one */
     pthread_detach(pthread_self());
-
-    workersCounter++;
-    defer( workersCounter-- );
 
     worker.run();
 
@@ -298,15 +298,10 @@ void HttpServer::listen(const char* host, int port) {
 }
 
 /* One iteration of accept loop */
-bool HttpServer::accept(const std::atomic_bool& terminate_flag) {
+void HttpServer::accept() {
     int accepted_socket = ::accept(_listen_socket, 0, 0);
     if(accepted_socket == -1)
         throw std::runtime_error("HttpServer::accept() - accept() call failed");
-
-    if(terminate_flag.load()) {
-        close(accepted_socket);
-        return false;
-    }
 
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {
@@ -318,12 +313,18 @@ bool HttpServer::accept(const std::atomic_bool& terminate_flag) {
     arg->handlers = _handlers;
     arg->workersCounter = &_workersCounter;
 
+    /*
+     * We need to increase workersCounter in the parent process to prevent race
+     * condition. Otherwise it's possible that parent process will terminate
+     * before child process increments a counter.
+     */
+    _workersCounter++;
+
     pthread_t thr;
     if(pthread_create(&thr, nullptr, _httpWorkerThreadProc, (void*)arg) != 0) {
+        _workersCounter--;
         close(accepted_socket);
         delete arg;
         throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
     }
-
-    return true;
 }

@@ -81,8 +81,6 @@ int main(int argc, char** argv) {
     server.listen("127.0.0.1", port);
     for(;;) {
         if(terminate_flag.load()) break;
-
-        // TODO: There is a race condition here. HttpServer should kill (and/or wait for) all running workers in it's destructor.
         server.accept();
     }
     return 0;

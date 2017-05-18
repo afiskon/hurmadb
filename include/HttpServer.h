@@ -5,6 +5,7 @@
 #include <pcre.h>
 #include <stdexcept>
 #include <string>
+#include <atomic>
 #include <Socket.h>
 #include <HttpRequest.h>
 #include <HttpResponse.h>
@@ -49,6 +50,7 @@ class HttpServer {
     private:
         bool _listen_done;
         int _listen_socket;
+        std::atomic_int _workersCounter;
         HttpHandlerListItem* _handlers;
 
         void _ignoreSigpipe();

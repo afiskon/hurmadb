@@ -6,6 +6,8 @@
 #include <utility>
 #include <string>
 #include <iostream>
+#include <atomic>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -30,6 +32,7 @@
 struct HttpWorkerThreadProcArg {
     int socket;
     HttpHandlerListItem* handlers;
+    std::atomic_int* workersCounter;
 };
 
 static void _httpBadRequestHandler(const HttpRequest&, HttpResponse& resp) {
@@ -44,11 +47,17 @@ static void* _httpWorkerThreadProc(void* rawArg) {
     HttpWorkerThreadProcArg* arg = (HttpWorkerThreadProcArg*)rawArg;
     Socket socket(arg->socket);
     HttpWorker worker(socket, arg->handlers);
+    std::atomic_int& workersCounter = *arg->workersCounter;
     delete arg;
 
     /* No other thread is going to join() this one */
     pthread_detach(pthread_self());
+
+    workersCounter++;
+    defer( workersCounter-- );
+
     worker.run();
+
     pthread_exit(nullptr);
 }
 
@@ -209,13 +218,20 @@ void HttpWorker::run() {
  **********************************************************************
  */
 
-HttpServer::HttpServer() {
-    _handlers = nullptr;
-    _listen_done = false;
-    _listen_socket = -1;
-}
+HttpServer::HttpServer():
+    _listen_done(false),
+    _listen_socket(-1),
+    _workersCounter(0),
+    _handlers(nullptr) { }
 
 HttpServer::~HttpServer() {
+    // TODO: add timeout here and kill workers using pthread_kill if necessary
+
+    /* wait for running workers */
+    while(_workersCounter.load() > 0) {
+        usleep(10 * 1000); /* wait 10 ms */
+    }
+
     if(_listen_done)
         close(_listen_socket);
 
@@ -295,6 +311,8 @@ void HttpServer::accept() {
 
     arg->socket = accepted_socket;
     arg->handlers = _handlers;
+    arg->workersCounter = &_workersCounter;
+
     pthread_t thr;
     if(pthread_create(&thr, nullptr, _httpWorkerThreadProc, (void*)arg) != 0)
         throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");

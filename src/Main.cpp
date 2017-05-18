@@ -4,6 +4,7 @@
 #include <utility>
 #include <map>
 #include <iostream>
+#include <atomic>
 #include <signal.h>
 #include <HttpServer.h>
 //#include <InMemoryStorage.h>
@@ -23,8 +24,7 @@
 //InMemoryStorage storage;
 PersistentStorage storage;
 
-pthread_mutex_t terminate_lock;
-static bool terminate = false;
+static std::atomic_bool terminate_flag(false);
 
 static void httpIndexGetHandler(const HttpRequest&, HttpResponse& resp) {
     resp.setStatus(HTTP_STATUS_OK);
@@ -55,9 +55,7 @@ static void httpKVDeleteHandler(const HttpRequest& req, HttpResponse& resp) {
 
 /* Required for generating code coverage report */
 static void httpStopPutHandler(const HttpRequest&, HttpResponse& resp) {
-    pthread_mutex_lock(&terminate_lock);
-    terminate = true;
-    pthread_mutex_unlock(&terminate_lock);
+    terminate_flag.store(true);
     resp.setStatus(HTTP_STATUS_OK);
 }
 
@@ -82,10 +80,8 @@ int main(int argc, char** argv) {
 
     server.listen("127.0.0.1", port);
     for(;;) {
-        pthread_mutex_lock(&terminate_lock);
-        bool term = terminate;
-        pthread_mutex_unlock(&terminate_lock);
-        if(term) break;
+        if(terminate_flag.load()) break;
+
         // TODO: There is a race condition here. HttpServer should kill (and/or wait for) all running workers in it's destructor.
         server.accept();
     }

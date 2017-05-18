@@ -79,9 +79,7 @@ int main(int argc, char** argv) {
     server.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
 
     server.listen("127.0.0.1", port);
-    for(;;) {
-        if(terminate_flag.load()) break;
-        server.accept();
-    }
+    while(server.accept(terminate_flag)) {}
+
     return 0;
 }

@@ -298,10 +298,15 @@ void HttpServer::listen(const char* host, int port) {
 }
 
 /* One iteration of accept loop */
-void HttpServer::accept() {
+bool HttpServer::accept(const std::atomic_bool& terminate_flag) {
     int accepted_socket = ::accept(_listen_socket, 0, 0);
     if(accepted_socket == -1)
         throw std::runtime_error("HttpServer::accept() - accept() call failed");
+
+    if(terminate_flag.load()) {
+        close(accepted_socket);
+        return false;
+    }
 
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {
@@ -314,6 +319,11 @@ void HttpServer::accept() {
     arg->workersCounter = &_workersCounter;
 
     pthread_t thr;
-    if(pthread_create(&thr, nullptr, _httpWorkerThreadProc, (void*)arg) != 0)
+    if(pthread_create(&thr, nullptr, _httpWorkerThreadProc, (void*)arg) != 0) {
+        close(accepted_socket);
+        delete arg;
         throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
+    }
+
+    return true;
 }

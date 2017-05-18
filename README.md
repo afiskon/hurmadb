@@ -57,6 +57,17 @@ curl -XPUT -d 'SomeRandomData123' localhost:8080/v1/kv/123 -D - -o -
 wrk -t10 -c10 -d10s http://localhost:8080/v1/kv/123
 ```
 
+Run under Valgrind:
+
+```
+valgrind ./hurmadb 8080
+HURMADB_PORT=8080 make test
+
+# make sure result is:
+...
+ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
 Create a code coverage report:
 
 ```

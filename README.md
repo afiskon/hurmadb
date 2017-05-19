@@ -73,3 +73,6 @@ Create a code coverage report:
 ```
 ./code-coverage.sh
 ```
+
+# API
+The HurmaDB API is described [here](API.md).

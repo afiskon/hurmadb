@@ -90,10 +90,13 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
 
         int qstart = mvector[4];
         int qend = mvector[5];
-
         buf[qend] = '\0';
-
         req.setQuery(&buf[qstart]);
+
+        qstart = mvector[6];
+        qend = mvector[7];
+        buf[qend] = '\0';
+        req.setVersion(&buf[qstart]);
     }
 
     /* Step 2 - process headers */

@@ -67,7 +67,7 @@ HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList):
     _handlersList(handlersList) {
     }
 
-void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
+int HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     int mvector[32];
     char buf[256];
 
@@ -75,9 +75,10 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     {
         const pcre* req_re = RegexCache::getInstance().getHttpRequestPattern();
         int len = socket.readLine(buf, sizeof(buf));
+
         int rc = pcre_exec(req_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector)/sizeof(mvector[0]));
         if(rc < 0) /* no match */
-            throw HttpWorkerException();
+            throw HttpWorkerException("HttpWorker::_deserializeHttpRequest() - no query match");
 
         if(buf[0] == 'G')
             req.setMethod(HTTP_GET);
@@ -104,7 +105,9 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
         const pcre* header_re = RegexCache::getInstance().getHttpHeaderPattern();
         for(;;) {
             size_t len = socket.readLine(buf, sizeof(buf));
-            if(len == 0) break;
+            if(len == 0) { // end of headers
+                break;
+            }
 
             int rc = pcre_exec(header_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector)/sizeof(mvector[0]));
             if(rc < 0) continue; /* no match - ignore garbage in headers */
@@ -127,7 +130,7 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
         if(found) {
             ssize_t contentLength = std::stoi(contentLengthStr);
             if(contentLength < 0 || contentLength > MAX_BODY_SIZE)
-                throw HttpWorkerException(); /* wrong query */
+                throw HttpWorkerException("HttpWorker::_deserializeHttpRequest() - wrong content length");
 
             char* tmp_buff = new char[ contentLength + 1 ];
             defer( delete[] tmp_buff );
@@ -137,6 +140,8 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
             req.setBody(tmp_buff);
         }
     }
+
+    return 0;
 }
 
 void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp) {
@@ -146,9 +151,7 @@ void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse
     snprintf(codeAndDescr, sizeof(codeAndDescr), "HTTP/1.1 %3u %s\r\n", httpStatus.getCode(), httpStatus.getDescr());
     socket.write(codeAndDescr, strlen(codeAndDescr));
 
-    if(!resp.headerDefined("Connection"))
-        resp.emplaceHeader("Connection", "close"); /* here is why HttpResponse is not `const` */
-
+    /* here is why HttpResponse is not `const` */
     if(!resp.headerDefined("Content-Length"))
         resp.emplaceHeader("Content-Length", std::to_string(resp.getBody().size()));
 
@@ -189,30 +192,43 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
         }
         listItem = listItem->next;
     }
-
+    std::cout << "_chooseHAndler(): handler not found for query " << req.getQuery() << std::endl;
     return _httpNotFoundHandler;
 }
 
 // TODO: support Connection: keep-alive
 void HttpWorker::run() {
-    HttpRequest req;
-    HttpResponse resp;
-    HttpRequestHandler handler = _httpBadRequestHandler;
+    bool isPersistent; 
+    do {
+        HttpRequest req;
+        HttpResponse resp;
+        HttpRequestHandler handler = _httpBadRequestHandler;
 
-    try {
-        _deserializeHttpRequest(_socket, req);
-        handler = _chooseHandler(req);
-    } catch (const HttpWorkerException& e) {
-        handler = _httpBadRequestHandler;
-    }
+        try {
+            _deserializeHttpRequest(_socket, req);
+            handler = _chooseHandler(req);
+        } catch (const HttpWorkerException& e) {
+            std::cout << "HttpWorker::run(): " << e.what() << std::endl;
+            handler = _httpBadRequestHandler;
+        } catch (const std::runtime_error& e) {
+            std::cout << "HttpWorker::run(): " << e.what() << std::endl;
+            break;
+        }
+        isPersistent = req.isPersistent();
+ 
+        try {
+            handler(req, resp);
 
-    try {
-        handler(req, resp);
-        _serializeHttpResponse(_socket, resp);
-    } catch (const std::exception& e) {
-        // TODO: report internal server error
-        std::cerr << "HttpWorker::run() terminated with an exception: " << e.what() << std::endl;
-    }
+            if (!isPersistent)
+                resp.emplaceHeader("Connection", "close");
+
+             _serializeHttpResponse(_socket, resp);
+        } catch (const std::exception& e) {
+            // TODO: report internal server error
+            std::cerr << "HttpWorker::run() terminated with an exception: " << e.what() << std::endl;
+        }
+    } while (isPersistent);
+    std::cout << "finish HttpWorker" << std::endl;
 }
 
 /*

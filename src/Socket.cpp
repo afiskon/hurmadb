@@ -42,7 +42,9 @@ void Socket::writeEOL() {
 void Socket::read(char *buff, size_t buffsize) {
     while(buffsize > 0) {
         ssize_t res = ::read(_fd, buff, buffsize);
-        if(res <= 0) {
+        if(res == 0) {
+            throw std::runtime_error("Socket::read() - client closed connection");
+        } else if(res < 0) {
             if(errno == EINTR)
                 continue;
             throw std::runtime_error("Socket::read() - read() failed");
@@ -71,7 +73,8 @@ size_t Socket::readLine(char *buff, size_t buffsize) {
                 continue;
 
             if(res == 0) /* keep this! */
-                return 0;
+                throw std::runtime_error("Socket::read() - client closed connection");
+//                return 0;
 
             std::ostringstream oss;
             oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno;

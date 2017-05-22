@@ -20,6 +20,7 @@
 #include <HttpServer.h>
 #include <Socket.h>
 #include <defer.h>
+#include <sstream>
 
 /*
  **********************************************************************
@@ -143,26 +144,21 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
 }
 
 void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp) {
-    const HttpStatus& httpStatus = resp.getStatus();
-    char codeAndDescr[128];
+    std::stringstream buffer;
 
-    snprintf(codeAndDescr, sizeof(codeAndDescr), "HTTP/1.1 %3u %s\r\n", httpStatus.getCode(), httpStatus.getDescr());
-    socket.write(codeAndDescr, strlen(codeAndDescr));
+    buffer << "HTTP/1.1 " << resp.getStatus().getCode() << " "
+        << resp.getStatus().getDescr() << "\r\n";
 
     /* here is why HttpResponse is not `const` */
     if(!resp.headerDefined("Content-Length"))
         resp.emplaceHeader("Content-Length", std::to_string(resp.getBody().size()));
 
     for(auto const &entry: resp.getHeaders()) {
-        static const std::string headerSplitter(": ");
-        socket.write(entry.first);
-        socket.write(headerSplitter);
-        socket.write(entry.second);
-        socket.writeEOL();
+        buffer << entry.first << ": " << entry.second << "\r\n";
     }
 
-    socket.writeEOL();
-    socket.write(resp.getBody());
+    buffer << "\r\n" << resp.getBody();
+    socket.write(buffer.str());
 }
 
 HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {

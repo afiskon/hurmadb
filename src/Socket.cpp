@@ -34,11 +34,6 @@ void Socket::write(const std::string& buff) {
     write(buff.c_str(), buff.size());
 }
 
-void Socket::writeEOL() {
-    static const char EOL[] = "\r\n";
-    write(EOL, sizeof(EOL)-1);
-}
-
 void Socket::read(char *buff, size_t buffsize) {
     while(buffsize > 0) {
         ssize_t res = ::read(_fd, buff, buffsize);

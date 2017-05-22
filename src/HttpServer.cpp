@@ -316,11 +316,19 @@ void HttpServer::listen(const char* host, int port) {
     _listen_done = true;
 }
 
+#include <netinet/tcp.h>
 /* One iteration of accept loop */
 void HttpServer::accept() {
     int accepted_socket = ::accept(_listen_socket, 0, 0);
     if(accepted_socket == -1)
         throw std::runtime_error("HttpServer::accept() - accept() call failed");
+
+    // disable TCP Nagle's algorithm
+    int val = 1;
+    if (setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) < 0) {
+        close(accepted_socket);
+        throw std::runtime_error("HttpServer::accept() - setsockopt(2) error");
+    }
 
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {

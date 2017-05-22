@@ -74,7 +74,6 @@ size_t Socket::readLine(char *buff, size_t buffsize) {
 
             if(res == 0) /* keep this! */
                 throw std::runtime_error("Socket::read() - client closed connection");
-//                return 0;
 
             std::ostringstream oss;
             oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno;

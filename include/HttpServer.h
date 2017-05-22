@@ -45,7 +45,7 @@ class HttpWorker {
         HttpHandlerListItem* _handlersList;
 
         HttpRequestHandler _chooseHandler(HttpRequest& req);
-        int _deserializeHttpRequest(Socket& socket, HttpRequest& req);
+        void _deserializeHttpRequest(Socket& socket, HttpRequest& req);
         void _serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp);
 };
 

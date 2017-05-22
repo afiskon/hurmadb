@@ -67,7 +67,7 @@ HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList):
     _handlersList(handlersList) {
     }
 
-int HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
+void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     int mvector[32];
     char buf[256];
 
@@ -140,8 +140,6 @@ int HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
             req.setBody(tmp_buff);
         }
     }
-
-    return 0;
 }
 
 void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp) {

@@ -196,7 +196,6 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
     return _httpNotFoundHandler;
 }
 
-// TODO: support Connection: keep-alive
 void HttpWorker::run() {
     bool isPersistent; 
     do {

@@ -46,7 +46,6 @@ class HttpWorker {
 
         HttpRequestHandler _chooseHandler(HttpRequest& req);
         void _deserializeHttpRequest(Socket& socket, HttpRequest& req);
-        void _serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp);
 };
 
 class HttpServer {

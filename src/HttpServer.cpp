@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <signal.h>
@@ -143,24 +144,6 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     }
 }
 
-void HttpWorker::_serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp) {
-    std::stringstream buffer;
-
-    buffer << "HTTP/1.1 " << resp.getStatus().getCode() << " "
-        << resp.getStatus().getDescr() << "\r\n";
-
-    /* here is why HttpResponse is not `const` */
-    if(!resp.headerDefined("Content-Length"))
-        resp.emplaceHeader("Content-Length", std::to_string(resp.getBody().size()));
-
-    for(auto const &entry: resp.getHeaders()) {
-        buffer << entry.first << ": " << entry.second << "\r\n";
-    }
-
-    buffer << "\r\n" << resp.getBody();
-    socket.write(buffer.str());
-}
-
 HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
     const char* query = req.getQuery().c_str();
     int query_len = strlen(query);
@@ -186,7 +169,7 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
         }
         listItem = listItem->next;
     }
-    std::cout << "_chooseHAndler(): handler not found for query " << req.getQuery() << std::endl;
+    std::cout << "_chooseHandler(): handler not found for query " << req.getQuery() << std::endl;
     return _httpNotFoundHandler;
 }
 
@@ -215,7 +198,7 @@ void HttpWorker::run() {
             if (!isPersistent)
                 resp.emplaceHeader("Connection", "close");
 
-             _serializeHttpResponse(_socket, resp);
+            _socket.write(resp.serialize());
         } catch (const std::exception& e) {
             // TODO: report internal server error
             std::cerr << "HttpWorker::run() terminated with an exception: " << e.what() << std::endl;
@@ -309,7 +292,6 @@ void HttpServer::listen(const char* host, int port) {
     _listen_done = true;
 }
 
-#include <netinet/tcp.h>
 /* One iteration of accept loop */
 void HttpServer::accept() {
     int accepted_socket = ::accept(_listen_socket, 0, 0);

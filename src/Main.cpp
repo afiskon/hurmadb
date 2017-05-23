@@ -11,6 +11,8 @@
 //#include <InMemoryStorage.h>
 #include <PersistentStorage.h>
 
+// TODO: add a script that runs clang-format for code formatting
+// TODO: add a script that runs clang static analyzer
 // TODO: plugable porotols, e.g. support Memcached protocol
 // TODO: describe REST API in README.md or API.md
 // TODO: support rangescans

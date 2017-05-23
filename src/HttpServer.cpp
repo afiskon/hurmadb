@@ -68,6 +68,7 @@ HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList):
     _handlersList(handlersList) {
     }
 
+// TODO: refactor, make it HttpRequest method simialar to serialize is a method of HttpResponse
 void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     int mvector[32];
     char buf[256];

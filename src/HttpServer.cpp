@@ -21,7 +21,6 @@
 #include <HttpServer.h>
 #include <Socket.h>
 #include <defer.h>
-#include <sstream>
 
 /*
  **********************************************************************
@@ -169,7 +168,7 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
         }
         listItem = listItem->next;
     }
-    std::cout << "_chooseHandler(): handler not found for query " << req.getQuery() << std::endl;
+    std::cerr << "_chooseHandler(): handler not found for query " << req.getQuery() << std::endl;
     return _httpNotFoundHandler;
 }
 
@@ -184,10 +183,10 @@ void HttpWorker::run() {
             _deserializeHttpRequest(_socket, req);
             handler = _chooseHandler(req);
         } catch (const HttpWorkerException& e) {
-            std::cout << "HttpWorker::run(): " << e.what() << std::endl;
+            std::cerr << "HttpWorker::run(): " << e.what() << std::endl;
             handler = _httpBadRequestHandler;
         } catch (const std::runtime_error& e) {
-            std::cout << "HttpWorker::run(): " << e.what() << std::endl;
+            std::cerr << "HttpWorker::run(): " << e.what() << std::endl;
             break;
         }
         isPersistent = req.isPersistent();

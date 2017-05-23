@@ -10,7 +10,7 @@ const RegexCache& RegexCache::getInstance() {
 RegexCache::RegexCache() {
     int erroroffset;
     const char* error;
-    static const char req_pattern[] = "^(GET|POST|PUT|DELETE) ([^ ?]+)[^ ]* HTTP/1.[01]$";
+    static const char req_pattern[] = "^(GET|POST|PUT|DELETE) ([^ ?]+)[^ ]* (HTTP/1.[01])$";
     static const char header_pattern[] = "^([a-zA-Z0-9_-]+):[ ]+(.+)$";
 
     _httpRequestPattern = nullptr;

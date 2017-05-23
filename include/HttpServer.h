@@ -20,7 +20,20 @@ struct HttpHandlerListItem {
     HttpRequestHandler handler;
 };
 
-class HttpWorkerException { };
+class HttpWorkerException : public std::exception {
+public:
+    explicit HttpWorkerException(const char* msg):
+        _msg(msg)
+    {
+    }
+
+    virtual const char* what() const throw () {
+        return _msg.c_str();
+    }
+
+private:
+    std::string _msg;
+};
 
 class HttpWorker {
     public:
@@ -33,7 +46,6 @@ class HttpWorker {
 
         HttpRequestHandler _chooseHandler(HttpRequest& req);
         void _deserializeHttpRequest(Socket& socket, HttpRequest& req);
-        void _serializeHttpResponse(Socket& socket, /* const */ HttpResponse& resp);
 };
 
 class HttpServer {

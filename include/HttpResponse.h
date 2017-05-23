@@ -46,7 +46,9 @@ class HttpResponse {
 
         const std::map< std::string, std::string >& getHeaders();
         void emplaceHeader(std::string&& name, std::string&& value);
-        bool headerDefined(const std::string& name);
+        bool headerDefined(const std::string& name) const;
+
+        const std::string serialize() const;
 
         HttpResponse(HttpResponse const &) = delete;
         void operator=(HttpResponse const &) = delete;

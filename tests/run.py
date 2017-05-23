@@ -8,6 +8,7 @@ import subprocess
 import requests
 import logging
 import time
+import socket
 
 START = os.environ.get('HURMADB_PORT') is None
 PORT = os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000))
@@ -80,3 +81,16 @@ class TestBasic:
         res = requests.delete(url)
         # InMemory backend returns 404, RocksDB backend always returns 200
         assert(res.status_code == 200 or res.status_code == 404)
+
+    # Test multiple message exchange during one connection
+    def test_keep_alive(self):
+        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.connect(('localhost', PORT))
+        conn.send(b"GET / HTTP/1.1\r\n\r\n")
+        data = conn.recv(1024)
+        assert(data.startswith(b"HTTP/1.1 200 OK"))
+        conn.send(b"GET / HTTP/1.1\r\n\r\n")
+        data = conn.recv(1024)
+        assert(data.startswith(b"HTTP/1.1 200 OK"))
+        conn.close()
+        assert(True)

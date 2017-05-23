@@ -2,6 +2,8 @@
 
 #include <HttpResponse.h>
 
+#include <sstream>
+
 HttpStatus::HttpStatus() {
     _code = 0;
     _descr = "Undefined";
@@ -45,7 +47,7 @@ void HttpResponse::setStatus(const HttpStatus& status) {
     _httpStatus = status;
 }
 
-bool HttpResponse::headerDefined(const std::string& name) {
+bool HttpResponse::headerDefined(const std::string& name) const {
     return _headers.find(name) != _headers.end();
 }
 
@@ -63,4 +65,20 @@ void HttpResponse::setBody(const std::string& body) {
 
 const std::string& HttpResponse::getBody() const {
     return _body;
+}
+
+const std::string HttpResponse::serialize() const {
+    std::stringstream buffer;
+
+    buffer << "HTTP/1.1 " << _httpStatus.getCode() << " " << _httpStatus.getDescr() << "\r\n";
+
+    for (auto const &entry: _headers)
+        buffer << entry.first << ": " << entry.second << "\r\n";
+
+    if (!headerDefined("Content-Length"))
+        buffer << "Content-Length: " << _body.size() << "\r\n";
+
+    buffer << "\r\n" << _body;
+
+    return buffer.str();
 }

@@ -21,6 +21,9 @@ class HttpRequest {
         HttpMethod getMethod() const;
         void setMethod(HttpMethod method);
 
+        const std::string& getVersion() const;
+        void setVersion(const std::string& version);
+
         const std::string& getQuery() const;
         void setQuery(const std::string& query);
 
@@ -39,11 +42,15 @@ class HttpRequest {
         void setBody(const std::string& body);
         const std::string& getBody() const;
 
+        // Returns true if connection is persistent
+        bool isPersistent() const;
+
         HttpRequest(HttpRequest const &) = delete;
         void operator=(HttpRequest const &) = delete;
 
     private:
         HttpMethod _httpMethod;
+        std::string _version;
         std::string _query;
         std::map< std::string, std::string > _headers;
         std::string _body;

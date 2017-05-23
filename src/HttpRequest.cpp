@@ -22,6 +22,14 @@ void HttpRequest::setMethod(HttpMethod method) {
     _httpMethod = method;
 }
 
+const std::string& HttpRequest::getVersion() const {
+    return _version;
+}
+
+void HttpRequest::setVersion(const std::string& version) {
+    _version = version;
+}
+
 const std::string& HttpRequest::getQuery() const {
     return _query;
 }
@@ -78,4 +86,23 @@ void HttpRequest::setBody(const std::string& body) {
 
 const std::string& HttpRequest::getBody() const {
     return _body;
+}
+
+// According https://tools.ietf.org/html/rfc7230#page-52
+// the connection is persistent if:
+// 1. 'Connection: close' header is not present
+// 2. If version is HTTP/1.1 or higher
+// 3. If version is HTTP/1.0 and 'Connection: keep-alive' is present
+bool HttpRequest::isPersistent() const {
+    bool result;
+    if(getHeader("Connection") == "close") {
+        result = false;
+    } else if(getVersion() == "HTTP/1.1") {
+        result = true;
+    } else if(getVersion() == "HTTP/1.0" && getHeader("Connection") == "keep-alive") {
+        result = true;
+    } else {
+        result = false;
+    }
+    return result;
 }

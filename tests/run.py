@@ -93,4 +93,3 @@ class TestBasic:
         data = conn.recv(1024)
         assert(data.startswith(b"HTTP/1.1 200 OK"))
         conn.close()
-        assert(True)

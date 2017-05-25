@@ -293,7 +293,28 @@ void HttpServer::listen(const char* host, int port) {
 }
 
 /* One iteration of accept loop */
-void HttpServer::accept() {
+void HttpServer::accept(const std::atomic_bool& terminate_flag) {
+    for(;;) {
+        struct timeval tv; /* we have to re-initialize these structures every time */
+        tv.tv_sec = 1L;
+        tv.tv_usec = 0;
+
+        fd_set rfds;
+        FD_ZERO(&rfds);
+        FD_SET(_listen_socket, &rfds);
+
+        int res = select(_listen_socket+1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
+        if(res > 0) /* ready to accept() */
+            break;
+
+        if(res < 0) /* error */
+            throw std::runtime_error("HttpServer::accept() - select() call failed");
+
+        /* timeout - check a terminate flag */
+        if(terminate_flag.load())
+            return;
+    }
+
     int accepted_socket = ::accept(_listen_socket, 0, 0);
     if(accepted_socket == -1)
         throw std::runtime_error("HttpServer::accept() - accept() call failed");

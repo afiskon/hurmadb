@@ -54,7 +54,7 @@ class HttpServer {
         ~HttpServer();
         void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
         void listen(const char* host, int port);
-        void accept();
+        void accept(const std::atomic_bool& terminate_flag);
 
         HttpServer(HttpServer const &) = delete;
         void operator=(HttpServer const &) = delete;

@@ -29,11 +29,6 @@ def hurmadb_stop(pobj):
     """
     requests.put('http://localhost:{}/v1/_stop'.format(PORT))
 
-    try:
-        requests.get('http://localhost:{}/'.format(PORT))
-    except:
-        pass
-
     if START:
         pobj.wait()
 

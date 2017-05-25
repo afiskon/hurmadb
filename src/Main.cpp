@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     server.listen("127.0.0.1", port);
 
     while(!terminate_flag.load()) {
-        server.accept();
+        server.accept(terminate_flag);
     }
 
     return 0;

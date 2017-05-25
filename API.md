@@ -22,7 +22,7 @@
 * **Sample Call:**
   
   ```
-  curl -i -XGET localhost:8080/
+  curl -v -XGET localhost:8080/
   ```
   
   
@@ -34,7 +34,7 @@
   
 * **Method:**
 
-  `GET` | `PUT`
+  `PUT`
   
 * **Success Response:**
   
@@ -43,7 +43,7 @@
 * **Sample Call:**
   
   ```
-  curl -i -XPUT localhost:8080/v1/_stop
+  curl -v -XPUT localhost:8080/v1/_stop
   ```
   
   
@@ -76,9 +76,9 @@
 * **Sample Call:**
   
   ```
-  curl -i -XPUT -d 'some_value' localhost:8080/v1/kv/some_key
+  curl -v -XPUT -d 'some_value' localhost:8080/v1/kv/some_key
   
-  curl -i -XGET localhost:8080/v1/kv/some_key
+  curl -v -XGET localhost:8080/v1/kv/some_key
   
-  curl -i -XDELETE localhost:8080/v1/kv/some_key
+  curl -v -XDELETE localhost:8080/v1/kv/some_key
   ```

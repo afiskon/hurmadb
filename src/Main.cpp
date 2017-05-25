@@ -11,14 +11,12 @@
 //#include <InMemoryStorage.h>
 #include <PersistentStorage.h>
 
+// TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots, incremental backups and replication. Write a multithreaded test
 // TODO: add a script that runs clang-format for code formatting
 // TODO: add a script that runs clang static analyzer
 // TODO: plugable porotols, e.g. support Memcached protocol
 // TODO: describe REST API in README.md or API.md
 // TODO: support rangescans
-// TODO: support _rev in ::set, ::delete
-// TODO: multithread test with _rev
-// TODO: script - run under Valgrind
 // TODO: script - run under MemorySanitizer + other kinds of sanitizers
 // TODO: see `grep -r TODO ./`
 

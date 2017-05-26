@@ -1,9 +1,9 @@
 /* vim: set ai et ts=4 sw=4: */
 
 #include <HttpRequest.h>
-#include <string.h>
-#include <stdexcept>
 #include <map>
+#include <stdexcept>
+#include <string.h>
 #include <utility>
 
 HttpRequest::HttpRequest() {
@@ -11,7 +11,6 @@ HttpRequest::HttpRequest() {
 }
 
 HttpRequest::~HttpRequest() {
-    /* do nothing yet */
 }
 
 HttpMethod HttpRequest::getMethod() const {
@@ -51,10 +50,7 @@ const std::string& HttpRequest::getQueryMatch(size_t pos) const {
 }
 
 void HttpRequest::addHeader(const char* name, size_t name_len, const char* val, size_t val_len) {
-    _headers.emplace(std::make_pair(
-                std::string(name, name_len),
-                std::string(val, val_len)
-                ));
+    _headers.emplace(std::make_pair(std::string(name, name_len), std::string(val, val_len)));
 }
 
 // TODO: rewrite to std::optional introduced in GCC 7.x
@@ -76,7 +72,7 @@ const std::string& HttpRequest::getHeader(const std::string& name) const {
     return getHeader(name, &found);
 }
 
-const std::map< std::string, std::string >& HttpRequest::getHeaders() const {
+const std::map<std::string, std::string>& HttpRequest::getHeaders() const {
     return _headers;
 }
 

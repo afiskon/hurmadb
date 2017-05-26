@@ -1,17 +1,19 @@
 /* vim: set ai et ts=4 sw=4: */
 
+#include <HttpServer.h>
+#include <atomic>
+#include <iostream>
+#include <map>
+#include <signal.h>
+#include <sstream>
 #include <string>
 #include <utility>
-#include <map>
-#include <sstream>
-#include <iostream>
-#include <atomic>
-#include <signal.h>
-#include <HttpServer.h>
 //#include <InMemoryStorage.h>
 #include <PersistentStorage.h>
 
-// TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots, incremental backups and replication. Write a multithreaded test
+// TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
+// incremental backups and replication. Write
+// a multithreaded test
 // TODO: add a script that runs clang-format for code formatting
 // TODO: add a script that runs clang static analyzer
 // TODO: plugable porotols, e.g. support Memcached protocol
@@ -22,7 +24,7 @@
 
 // TODO: Keyspaces class
 
-//InMemoryStorage storage;
+// InMemoryStorage storage;
 PersistentStorage storage;
 
 static std::atomic_bool terminate_flag(false);
@@ -31,7 +33,7 @@ static void httpIndexGetHandler(const HttpRequest&, HttpResponse& resp) {
     resp.setStatus(HTTP_STATUS_OK);
 
     std::ostringstream oss;
-    oss << "HurmaDB is " << (terminate_flag.load() ? "terminating" : "running" ) << "!\n\n";
+    oss << "HurmaDB is " << (terminate_flag.load() ? "terminating" : "running") << "!\n\n";
     resp.setBody(oss.str());
 }
 

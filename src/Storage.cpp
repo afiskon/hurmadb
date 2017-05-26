@@ -7,7 +7,6 @@ std::string Storage::get(const std::string& key) {
     return get(key, &found);
 }
 
-
 void Storage::del(const std::string& key) {
     bool found; /* will be discarded */
     return del(key, &found);

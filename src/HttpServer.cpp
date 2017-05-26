@@ -1,26 +1,26 @@
 /* vim: set ai et ts=4 sw=4: */
 
-#include <stdexcept>
-#include <vector>
-#include <tuple>
-#include <utility>
-#include <string>
-#include <iostream>
+#include <HttpServer.h>
+#include <RegexCache.h>
+#include <Socket.h>
+#include <arpa/inet.h>
 #include <atomic>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <defer.h>
+#include <iostream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <arpa/inet.h>
+#include <pcre.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdexcept>
 #include <string.h>
-#include <pcre.h>
-#include <RegexCache.h>
-#include <HttpServer.h>
-#include <Socket.h>
-#include <defer.h>
+#include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <tuple>
+#include <unistd.h>
+#include <utility>
+#include <vector>
 
 /*
  **********************************************************************
@@ -28,7 +28,7 @@
  **********************************************************************
  */
 
-#define MAX_BODY_SIZE 1024*1024 /* 1 Mb should probably be enough */
+#define MAX_BODY_SIZE 1024 * 1024 /* 1 Mb should probably be enough */
 
 struct HttpWorkerThreadProcArg {
     int socket;
@@ -48,7 +48,7 @@ static void* _httpWorkerThreadProc(void* rawArg) {
     HttpWorkerThreadProcArg* arg = (HttpWorkerThreadProcArg*)rawArg;
     std::atomic_int& workersCounter = *arg->workersCounter;
 
-    defer( workersCounter-- ); // already incremented in the parent process
+    defer(workersCounter--); // already incremented in the parent process
 
     Socket socket(arg->socket);
     HttpWorker worker(socket, arg->handlers);
@@ -62,13 +62,13 @@ static void* _httpWorkerThreadProc(void* rawArg) {
     pthread_exit(nullptr);
 }
 
+HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList)
+  : _socket(socket)
+  , _handlersList(handlersList) {
+}
 
-HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList):
-    _socket(socket),
-    _handlersList(handlersList) {
-    }
-
-// TODO: refactor, make it HttpRequest method simialar to serialize is a method of HttpResponse
+// TODO: refactor, make it HttpRequest method simialar to serialize is a method
+// of HttpResponse
 void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     int mvector[32];
     char buf[256];
@@ -78,7 +78,7 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
         const pcre* req_re = RegexCache::getInstance().getHttpRequestPattern();
         int len = socket.readLine(buf, sizeof(buf));
 
-        int rc = pcre_exec(req_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector)/sizeof(mvector[0]));
+        int rc = pcre_exec(req_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector) / sizeof(mvector[0]));
         if(rc < 0) /* no match */
             throw HttpWorkerException("HttpWorker::_deserializeHttpRequest() - no query match");
 
@@ -111,17 +111,15 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
                 break;
             }
 
-            int rc = pcre_exec(header_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector)/sizeof(mvector[0]));
-            if(rc < 0) continue; /* no match - ignore garbage in headers */
+            int rc = pcre_exec(header_re, nullptr, buf, len, 0, 0, mvector, sizeof(mvector) / sizeof(mvector[0]));
+            if(rc < 0)
+                continue; /* no match - ignore garbage in headers */
 
             int name_start = mvector[2];
             int name_end = mvector[3];
             int val_start = mvector[4];
             int val_end = mvector[5];
-            req.addHeader(
-                buf + name_start, name_end - name_start,
-                buf + val_start, val_end - val_start
-            );
+            req.addHeader(buf + name_start, name_end - name_start, buf + val_start, val_end - val_start);
         }
     }
 
@@ -134,8 +132,8 @@ void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
             if(contentLength < 0 || contentLength > MAX_BODY_SIZE)
                 throw HttpWorkerException("HttpWorker::_deserializeHttpRequest() - wrong content length");
 
-            char* tmp_buff = new char[ contentLength + 1 ];
-            defer( delete[] tmp_buff );
+            char* tmp_buff = new char[contentLength + 1];
+            defer(delete[] tmp_buff);
 
             socket.read(tmp_buff, contentLength);
             tmp_buff[contentLength] = '\0';
@@ -162,7 +160,7 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
                  * of `man pcreapi`.
                  */
                 for(int i = 1; i < rc; i++)
-                    req.addQueryMatch(query + mvector[i*2], mvector[i*2 + 1] - mvector[i*2]);
+                    req.addQueryMatch(query + mvector[i * 2], mvector[i * 2 + 1] - mvector[i * 2]);
 
                 return listItem->handler;
             }
@@ -183,11 +181,11 @@ void HttpWorker::run() {
         try {
             _deserializeHttpRequest(_socket, req);
             handler = _chooseHandler(req);
-        } catch (const HttpWorkerException& e) {
+        } catch(const HttpWorkerException& e) {
             // TODO: don't report "Socket::read() - client closed connection"
             std::cerr << "HttpWorker::run(): " << e.what() << std::endl;
             handler = _httpBadRequestHandler;
-        } catch (const std::runtime_error& e) {
+        } catch(const std::runtime_error& e) {
             std::cerr << "HttpWorker::run(): " << e.what() << std::endl;
             break;
         }
@@ -196,15 +194,15 @@ void HttpWorker::run() {
         try {
             handler(req, resp);
 
-            if (!isPersistent)
+            if(!isPersistent)
                 resp.emplaceHeader("Connection", "close");
 
             _socket.write(resp.serialize());
-        } catch (const std::exception& e) {
+        } catch(const std::exception& e) {
             // TODO: report internal server error
             std::cerr << "HttpWorker::run() terminated with an exception: " << e.what() << std::endl;
         }
-    } while (isPersistent);
+    } while(isPersistent);
 }
 
 /*
@@ -213,11 +211,12 @@ void HttpWorker::run() {
  **********************************************************************
  */
 
-HttpServer::HttpServer():
-    _listen_done(false),
-    _listen_socket(-1),
-    _workersCounter(0),
-    _handlers(nullptr) { }
+HttpServer::HttpServer()
+  : _listen_done(false)
+  , _listen_socket(-1)
+  , _workersCounter(0)
+  , _handlers(nullptr) {
+}
 
 HttpServer::~HttpServer() {
     // TODO: add timeout here and kill workers using pthread_kill if necessary
@@ -264,12 +263,11 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
  */
 void HttpServer::_ignoreSigpipe() {
     sigset_t msk;
-    sigemptyset (&msk);
+    sigemptyset(&msk);
     sigaddset(&msk, SIGPIPE);
     if(pthread_sigmask(SIG_BLOCK, &msk, nullptr) != 0)
         throw std::runtime_error("HttpServer::_ignoreSigpipe() - pthread_sigmask() call failed");
 }
-
 
 void HttpServer::listen(const char* host, int port) {
     struct sockaddr_in addr;
@@ -303,7 +301,7 @@ void HttpServer::accept(const std::atomic_bool& terminate_flag) {
         FD_ZERO(&rfds);
         FD_SET(_listen_socket, &rfds);
 
-        int res = select(_listen_socket+1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
+        int res = select(_listen_socket + 1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
         if(res > 0) /* ready to accept() */
             break;
 
@@ -321,7 +319,7 @@ void HttpServer::accept(const std::atomic_bool& terminate_flag) {
 
     // disable TCP Nagle's algorithm
     int val = 1;
-    if (setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) < 0) {
+    if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) < 0) {
         close(accepted_socket);
         throw std::runtime_error("HttpServer::accept() - setsockopt(2) error");
     }

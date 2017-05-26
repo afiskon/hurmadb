@@ -36,7 +36,6 @@ const HttpStatus HTTP_STATUS_NOT_FOUND(404, "Not Found");
 const HttpStatus HTTP_STATUS_INTERNAL_ERROR(500, "Internal Server Error");
 
 HttpResponse::HttpResponse() {
-    /* do nothing yet */
 }
 
 const HttpStatus& HttpResponse::getStatus() const {
@@ -55,7 +54,7 @@ void HttpResponse::emplaceHeader(std::string&& name, std::string&& value) {
     _headers.emplace(std::make_pair(name, value));
 }
 
-const std::map< std::string, std::string >& HttpResponse::getHeaders() {
+const std::map<std::string, std::string>& HttpResponse::getHeaders() {
     return _headers;
 }
 
@@ -72,10 +71,10 @@ const std::string HttpResponse::serialize() const {
 
     buffer << "HTTP/1.1 " << _httpStatus.getCode() << " " << _httpStatus.getDescr() << "\r\n";
 
-    for (auto const &entry: _headers)
+    for(auto const& entry : _headers)
         buffer << entry.first << ": " << entry.second << "\r\n";
 
-    if (!headerDefined("Content-Length"))
+    if(!headerDefined("Content-Length"))
         buffer << "Content-Length: " << _body.size() << "\r\n";
 
     buffer << "\r\n" << _body;

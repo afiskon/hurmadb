@@ -1,6 +1,6 @@
-#include <stdexcept>
 #include <RegexCache.h>
 #include <pcre.h>
+#include <stdexcept>
 
 const RegexCache& RegexCache::getInstance() {
     static RegexCache cache;

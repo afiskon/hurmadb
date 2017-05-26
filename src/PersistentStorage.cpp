@@ -1,8 +1,8 @@
 /* vim: set ai et ts=4 sw=4: */
 
+#include <PersistentStorage.h>
 #include <stdexcept>
 #include <string>
-#include <PersistentStorage.h>
 
 using namespace rocksdb;
 
@@ -42,4 +42,3 @@ void PersistentStorage::del(const std::string& key, bool* found) {
     Status s = _db->Delete(WriteOptions(), key);
     *found = s.ok(); // always returns true. TODO fix this + fix the test
 }
-

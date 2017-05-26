@@ -2,11 +2,11 @@
 
 #include <Socket.h>
 #include <algorithm>
+#include <errno.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 #include <unistd.h>
-#include <errno.h>
 
 Socket::Socket(int sock) {
     _fd = sock;
@@ -16,7 +16,7 @@ Socket::~Socket() {
     close(_fd);
 }
 
-void Socket::write(const char *buff, size_t buffsize) {
+void Socket::write(const char* buff, size_t buffsize) {
     while(buffsize > 0) {
         ssize_t res = ::write(_fd, buff, buffsize);
         if(res <= 0) {
@@ -34,7 +34,7 @@ void Socket::write(const std::string& buff) {
     write(buff.c_str(), buff.size());
 }
 
-void Socket::read(char *buff, size_t buffsize) {
+void Socket::read(char* buff, size_t buffsize) {
     while(buffsize > 0) {
         ssize_t res = ::read(_fd, buff, buffsize);
         if(res == 0) {
@@ -58,7 +58,7 @@ void Socket::read(char *buff, size_t buffsize) {
  * which should be somehow shifted all the time. So until this method
  * becomes a bottleneck for someone it's good enough.
  */
-size_t Socket::readLine(char *buff, size_t buffsize) {
+size_t Socket::readLine(char* buff, size_t buffsize) {
     size_t currsize = 0;
     // TODO: optimize, figure out how many bytes are available using ioctl
     while(currsize < buffsize) {
@@ -77,14 +77,14 @@ size_t Socket::readLine(char *buff, size_t buffsize) {
 
         currsize++;
 
-        if((currsize >= 2) && (buff[currsize-1] == '\n') &&
-                ((buff[currsize-2] == '\r') || (buff[currsize-2] == '\n' /* see [1] */)))
-        {
+        if((currsize >= 2) && (buff[currsize - 1] == '\n') &&
+           ((buff[currsize - 2] == '\r') || (buff[currsize - 2] == '\n' /* see [1] */))) {
             /* [1] - it's for debugging purpose only, in case developer decided to use `nc` */
-            buff[currsize-2] = '\0';
-            return currsize-2;
+            buff[currsize - 2] = '\0';
+            return currsize - 2;
         }
     }
 
-    throw std::runtime_error("Socket::readLine() - received string doesn't fit into buff, probably it's a garbage");
+    throw std::runtime_error("Socket::readLine() - received string doesn't fit "
+                             "into buff, probably it's a garbage");
 }

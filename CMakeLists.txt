@@ -31,3 +31,7 @@ target_link_libraries(hurmadb ${PTHREAD_LIBRARY} ${PCRE_LIBRARY} ${ROCKSDB_LIBRA
 enable_testing()
 add_test(NAME python_tests
          COMMAND py.test ${CMAKE_SOURCE_DIR}/tests/run.py)
+
+file(GLOB_RECURSE ALL_SOURCE_FILES *.cpp *.h)
+add_custom_target(format
+    COMMAND clang-format --style=file -i ${ALL_SOURCE_FILES} )

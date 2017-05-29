@@ -14,8 +14,7 @@
 // TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
 // incremental backups and replication. Write
 // a multithreaded test
-// TODO: add a script that runs clang-format for code formatting
-// TODO: add a script that runs clang static analyzer
+// TODO: add a script that runs clang static analyzer + cppcheck
 // TODO: plugable porotols, e.g. support Memcached protocol
 // TODO: describe REST API in README.md or API.md
 // TODO: support rangescans

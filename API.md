@@ -4,7 +4,7 @@
 
   `GET /`
   
-* **Success Response:**
+* **Successful Response:**
   
   * **Code:** `200` <br />
     **Content:** `HurmaDB is running!`
@@ -25,7 +25,7 @@
 
   `PUT /v1/_stop`
   
-* **Success Response:**
+* **Successful Response:**
   
   * **Code:** `200` <br />
  
@@ -44,7 +44,7 @@
 
   Stored value
   
-* **Success Response:**
+* **Successful Response:**
   
   * **Code:** `200` <br />
   
@@ -63,7 +63,7 @@
 
   `GET /v1/kv/:key`
 
-* **Success Response:**
+* **Successful Response:**
   
   * **Code:** `200` <br /> <br />
     **Content:** `stored_value`
@@ -83,7 +83,7 @@
 
   `GET /v1/kv/:key`
 
-* **Success Response:**
+* **Successful Response:**
   
   * **Code:** `200` <br />
 

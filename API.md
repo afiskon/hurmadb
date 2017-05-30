@@ -1,13 +1,8 @@
-## Index
+# REST API v1
 
+## Get database state
 
-* **URL**
-
-  /
-  
-* **Method:**
-
-  `GET`
+  `GET /`
   
 * **Success Response:**
   
@@ -19,51 +14,35 @@
   * **Code:** `200` <br />
     **Content:** `HurmaDB is terminating!`
  
-* **Sample Call:**
+* **Example:**
   
   ```
   curl -v -XGET localhost:8080/
   ```
   
   
-## Stop
+## Stop database
 
-* **URL**
-
-  /v1/_stop
-  
-* **Method:**
-
-  `PUT`
+  `PUT /v1/_stop`
   
 * **Success Response:**
   
   * **Code:** `200` <br />
  
-* **Sample Call:**
+* **Example:**
   
   ```
   curl -v -XPUT localhost:8080/v1/_stop
   ```
   
   
-## KV
+## Store value
 
-* **URL**
+  `PUT /v1/kv/:key`
+  
+* **Data:**
 
-  /v1/kv/key
-  
-* **Method:**
-
-  `GET` | `DELETE` | `PUT`
-  
-* **Data Params**
-
-  Stored value.
-  
-  **Optional:**
-  
-  some_value
+  Stored value
   
 * **Success Response:**
   
@@ -73,12 +52,47 @@
 
   * **Code:** `404` <br />
 
-* **Sample Call:**
+* **Example:**
   
   ```
-  curl -v -XPUT -d 'some_value' localhost:8080/v1/kv/some_key
+  curl -v -XPUT -d 'some_value' localhost:8080/v1/kv/some_key  
+  ```
+
+
+## Get value
+
+  `GET /v1/kv/:key`
+
+* **Success Response:**
   
+  * **Code:** `200` <br /> <br />
+    **Content:** `stored_value`
+  
+* **Error Response:**
+
+  * **Code:** `404` <br />
+
+* **Example:**
+  
+  ```  
   curl -v -XGET localhost:8080/v1/kv/some_key
+  ```
+
+
+## Delete value
+
+  `GET /v1/kv/:key`
+
+* **Success Response:**
   
+  * **Code:** `200` <br />
+
+* **Error Response:**
+
+  * **Code:** `404` <br />
+
+* **Example:**
+  
+  ```
   curl -v -XDELETE localhost:8080/v1/kv/some_key
   ```

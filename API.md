@@ -47,10 +47,6 @@
 * **Successful Response:**
   
   * **Code:** `200` <br />
-  
-* **Error Response:**
-
-  * **Code:** `404` <br />
 
 * **Example:**
   

@@ -152,7 +152,8 @@ HttpRequestHandler HttpWorker::_chooseHandler(HttpRequest& req) {
             int mvector[32];
             const size_t mvectorItems = sizeof(mvector) / sizeof(mvector[0]);
             int rc = pcre_exec(listItem->regexp, nullptr, query, query_len, 0, 0, mvector, mvectorItems);
-            if(rc >= 0) { /* match! */
+            if(rc >= 0) {
+                /* match! */
                 /*
                  * Copy matched substrings of the query.
                  *
@@ -335,10 +336,10 @@ void HttpServer::accept(const std::atomic_bool& terminate_flag) {
     arg->workersCounter = &_workersCounter;
 
     /*
-     * We need to increase workersCounter in the parent process to prevent race
-     * condition. Otherwise it's possible that parent process will terminate
-     * before child process increments a counter.
-     */
+   * We need to increase workersCounter in the parent process to prevent race
+   * condition. Otherwise it's possible that parent process will terminate
+   * before child process increments a counter.
+   */
     _workersCounter++;
 
     pthread_t thr;

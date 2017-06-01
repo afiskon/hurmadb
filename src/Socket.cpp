@@ -79,7 +79,8 @@ size_t Socket::readLine(char* buff, size_t buffsize) {
 
         if((currsize >= 2) && (buff[currsize - 1] == '\n') &&
            ((buff[currsize - 2] == '\r') || (buff[currsize - 2] == '\n' /* see [1] */))) {
-            /* [1] - it's for debugging purpose only, in case developer decided to use `nc` */
+            /* [1] - it's for debugging purpose only, in case developer decided to use 
+             * `nc` */
             buff[currsize - 2] = '\0';
             return currsize - 2;
         }

@@ -37,7 +37,7 @@
 
 namespace stdex {
 
-template<typename Func>
+template <typename Func>
 struct scope_guard {
     explicit scope_guard(Func&& on_exit)
       : on_exit_(std::move(on_exit))
@@ -67,7 +67,7 @@ private:
     bool enabled_;
 };
 
-template<typename Func>
+template <typename Func>
 auto make_guard(Func&& f) -> scope_guard<Func> {
     return scope_guard<Func>(std::forward<Func>(f));
 }

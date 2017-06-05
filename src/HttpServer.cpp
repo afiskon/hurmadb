@@ -308,8 +308,7 @@ void HttpServer::accept(const std::atomic_bool& terminate_flag) {
         if(res < 0) { /* error */
             if(errno == EINTR)
                 continue;
-            throw std::runtime_error("HttpServer::accept() - select() call failed: " +
-                                     std::string(strerror(errno)));
+            throw std::runtime_error("HttpServer::accept() - select() call failed: " + std::string(strerror(errno)));
         }
 
         /* timeout - check a terminate flag */

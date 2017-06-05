@@ -19,7 +19,7 @@ public:
     const size_t MAX_BUFFER_SIZE = 1024;
 
 private:
-    void bufferedRead();
+    void _bufferedRead();
 
     std::string _buffer;
     int _fd;

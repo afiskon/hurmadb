@@ -2,13 +2,12 @@
 
 #include <Socket.h>
 #include <algorithm>
+#include <cstring>
 #include <errno.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
-
-#include <cstring>
 
 Socket::Socket(int sock) {
     _fd = sock;
@@ -36,41 +35,47 @@ void Socket::write(const std::string& buff) {
     write(buff.c_str(), buff.size());
 }
 
+/*
+ * Reads buffsize bytes. Returns number of bytes read.
+ */
 void Socket::read(char* buff, const size_t buffsize) {
     while(_buffer.size() < buffsize)
-        bufferedRead();
+        _bufferedRead();
 
-    strncpy(buff, _buffer.c_str(), buffsize);
-    buff[buffsize] = '\0';
+    memcpy(buff, _buffer.c_str(), buffsize);
     _buffer = _buffer.substr(buffsize);
 }
 
 /*
- * Reads a line terminated by \r\n. Returns length of a received string.
+ * Reads a line terminated by \r\n or \n. Returns length of a received string.
  */
 size_t Socket::readLine(char* buff, const size_t buffsize) {
-    while(_buffer.find_first_of('\n', 0) == std::string::npos)
-        bufferedRead();
+    size_t start = 0;
+    size_t end;
 
-    size_t pos = _buffer.find_first_of('\n', 0);
-    if(pos > buffsize)
-        throw std::runtime_error("Socket::readLine - line too long");
-
-    strncpy(buff, _buffer.c_str(), pos);
-    buff[pos] = '\0';
-    _buffer = _buffer.substr(pos + 1);
-
-    if(pos > 0 && buff[pos - 1] == '\r') {
-        pos--;
-        buff[pos] = '\0';
+    while((end = _buffer.find_first_of('\n', start)) == std::string::npos) {
+        start = _buffer.length();
+        _bufferedRead();
     }
 
-    return pos;
+    if(end >= buffsize)
+        throw std::runtime_error("Socket::readLine - line too long");
+
+    strncpy(buff, _buffer.c_str(), end);
+    buff[end] = '\0';
+    _buffer = _buffer.substr(end + 1);
+
+    if(end > 0 && buff[end - 1] == '\r') {
+        end--;
+        buff[end] = '\0';
+    }
+
+    return end;
 }
 
-void Socket::bufferedRead() {
+void Socket::_bufferedRead() {
     char buff[MAX_BUFFER_SIZE];
-    ssize_t res = ::read(_fd, buff, MAX_BUFFER_SIZE);
+    ssize_t res = ::read(_fd, buff, MAX_BUFFER_SIZE - 1);
     buff[res] = '\0';
     if(res <= 0) {
         if(res == 0) /* keep this! */
@@ -82,7 +87,7 @@ void Socket::bufferedRead() {
     }
 
     if(res + _buffer.length() > MAX_BUFFER_SIZE)
-        throw std::runtime_error("Socket::bufferedRead() - received string doesn't fit "
+        throw std::runtime_error("Socket::_bufferedRead() - received string doesn't fit "
                                  "into buff, probably it's a garbage");
 
     _buffer += buff;

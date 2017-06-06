@@ -3,6 +3,9 @@
 
 #include <string>
 #include <unistd.h>
+#include <vector>
+
+#define MAX_BUFFER_SIZE 1024
 
 class Socket {
 public:
@@ -10,7 +13,6 @@ public:
     ~Socket();
     void write(const char* buff, size_t buffsize);
     void write(const std::string& buff);
-    void writeEOL();
     void read(char* buff, size_t buffsize);
     size_t readLine(char* buff, size_t buffsize);
 
@@ -18,5 +20,9 @@ public:
     void operator=(Socket const&) = delete;
 
 private:
+    void _bufferedRead();
+
+    char _buffer[MAX_BUFFER_SIZE];
+    size_t _bufferSize = 0;
     int _fd;
 };

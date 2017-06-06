@@ -1,4 +1,4 @@
-#!/usr/bin/env pytdate3
+#!/usr/bin/env python3
 
 # vim: set ai et ts=4 sw=4:
 

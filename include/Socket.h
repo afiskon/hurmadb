@@ -13,8 +13,8 @@ public:
     ~Socket();
     void write(const char* buff, size_t buffsize);
     void write(const std::string& buff);
-    void read(char* buff, const size_t buffsize);
-    size_t readLine(char* buff, const size_t buffsize);
+    void read(char* buff, size_t buffsize);
+    size_t readLine(char* buff, size_t buffsize);
 
     Socket(Socket const&) = delete;
     void operator=(Socket const&) = delete;

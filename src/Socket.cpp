@@ -38,7 +38,7 @@ void Socket::write(const std::string& buff) {
 /*
  * Reads buffsize bytes. Returns number of bytes read.
  */
-void Socket::read(char* buff, const size_t buffsize) {
+void Socket::read(char* buff, size_t buffsize) {
     if(buffsize > MAX_BUFFER_SIZE)
         throw new std::invalid_argument("Socket::read(): buffsize too large");
 
@@ -53,14 +53,15 @@ void Socket::read(char* buff, const size_t buffsize) {
 /*
  * Reads a line terminated by \r\n or \n. Returns length of a received string.
  */
-size_t Socket::readLine(char* buff, const size_t buffsize) {
-    size_t end = -1;
+size_t Socket::readLine(char* buff, size_t buffsize) {
+    size_t end = 0;
     do {
-        end++;
-        if(end == _bufferSize)
-            _bufferedRead();
         if(end >= buffsize)
             throw std::runtime_error("Socket::readLine - line too long");
+        if(end == _bufferSize)
+            _bufferedRead();
+        else
+            end++;
     } while(_buffer[end] != '\n');
 
     memcpy(buff, _buffer, end);
@@ -76,12 +77,17 @@ size_t Socket::readLine(char* buff, const size_t buffsize) {
 
 void Socket::_bufferedRead() {
     size_t count = MAX_BUFFER_SIZE - _bufferSize;
-    ssize_t res = ::read(_fd, _buffer + _bufferSize, count);
-    if(res <= 0) {
-        if(res == 0) /* keep this! */
-            throw std::runtime_error("Socket::read() - client closed connection");
+    ssize_t res;
+    do {
+        res = ::read(_fd, _buffer + _bufferSize, count);
+        if(res <= 0) {
+            if(errno == EINTR)
+                continue;
+            if(res == 0) /* keep this! */
+                throw std::runtime_error("Socket::read() - client closed connection");
 
-        throw std::runtime_error("Socket::readLine() - read() failed: " + std::string(strerror(errno)));
-    }
+            throw std::runtime_error("Socket::readLine() - read() failed: " + std::string(strerror(errno)));
+        }
+    } while(res <= 0 && errno == EINTR);
     _bufferSize += res;
 }

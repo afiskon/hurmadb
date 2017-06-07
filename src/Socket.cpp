@@ -2,14 +2,16 @@
 
 #include <Socket.h>
 #include <algorithm>
+#include <cstring>
 #include <errno.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
 
-Socket::Socket(int sock) {
-    _fd = sock;
+Socket::Socket(int sock)
+  : _fd(sock)
+  , _bufferSize(0) {
 }
 
 Socket::~Socket() {
@@ -34,57 +36,63 @@ void Socket::write(const std::string& buff) {
     write(buff.c_str(), buff.size());
 }
 
+/*
+ * Reads buffsize bytes.
+ */
 void Socket::read(char* buff, size_t buffsize) {
-    while(buffsize > 0) {
-        ssize_t res = ::read(_fd, buff, buffsize);
-        if(res == 0) {
-            throw std::runtime_error("Socket::read() - client closed connection");
-        } else if(res < 0) {
-            if(errno == EINTR)
-                continue;
-            throw std::runtime_error("Socket::read() - read() failed");
-        }
+    if(buffsize > _MAX_BUFFER_SIZE)
+        throw std::invalid_argument("Socket::read() - buffsize is too large");
 
-        buff += res;
-        buffsize -= res;
-    }
+    while(_bufferSize < buffsize)
+        _bufferedRead();
+
+    memcpy(buff, _buffer, buffsize);
+    _bufferSize -= buffsize;
+    memmove(_buffer, _buffer + buffsize, _bufferSize);
 }
 
 /*
- * Reads a line terminated by \r\n. Returns length of a received string.
- *
- * Current implementation reads bytes one by one. It's probably not the
- * best approach, but it's simple and doesn't require a temporary buffer
- * which should be somehow shifted all the time. So until this method
- * becomes a bottleneck for someone it's good enough.
+ * Reads a line terminated by \r\n or \n. Returns length of the received line.
  */
 size_t Socket::readLine(char* buff, size_t buffsize) {
-    size_t currsize = 0;
-    // TODO: optimize, figure out how many bytes are available using ioctl
-    while(currsize < buffsize) {
-        ssize_t res = ::read(_fd, buff + currsize, 1);
+    ssize_t end = -1;
+    do {
+        end++;
+
+        if(end >= (ssize_t)buffsize)
+            throw std::runtime_error("Socket::readLine - line is too long");
+
+        if(end == (ssize_t)_bufferSize)
+            _bufferedRead();
+    } while(_buffer[end] != '\n');
+
+    memcpy(buff, _buffer, end);
+    buff[end] = '\0';
+    _bufferSize -= end + 1;
+    memmove(_buffer, _buffer + end + 1, _bufferSize);
+    if(end > 0 && buff[end - 1] == '\r') {
+        end--;
+        buff[end] = '\0';
+    }
+    return end;
+}
+
+void Socket::_bufferedRead() {
+    size_t count = _MAX_BUFFER_SIZE - _bufferSize;
+    ssize_t res;
+    do {
+        res = ::read(_fd, _buffer + _bufferSize, count);
         if(res <= 0) {
             if(errno == EINTR)
                 continue;
-
             if(res == 0) /* keep this! */
                 throw std::runtime_error("Socket::read() - client closed connection");
 
             std::ostringstream oss;
-            oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno;
+            oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno
+                << " (" << strerror(errno) << ")";
             throw std::runtime_error(oss.str());
         }
-
-        currsize++;
-
-        if((currsize >= 2) && (buff[currsize - 1] == '\n') &&
-           ((buff[currsize - 2] == '\r') || (buff[currsize - 2] == '\n' /* see [1] */))) {
-            /* [1] - it's for debugging purpose only, in case developer decided to use `nc` */
-            buff[currsize - 2] = '\0';
-            return currsize - 2;
-        }
-    }
-
-    throw std::runtime_error("Socket::readLine() - received string doesn't fit "
-                             "into buff, probably it's a garbage");
+    } while(res <= 0);
+    _bufferSize += res;
 }

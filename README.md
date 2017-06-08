@@ -68,6 +68,14 @@ HURMADB_PORT=8080 make test
 ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
+Run a static analysis:
+
+```
+cppcheck ./src
+cd build-clang
+scan-build -o ./report make
+```
+
 Create a code coverage report:
 
 ```

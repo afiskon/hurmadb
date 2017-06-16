@@ -4,6 +4,11 @@ Work in progress.
 
 # How to build, test and run
 
+Obtain hurmadb:
+```
+git clone https://github.com/afiskon/hurmadb.git
+```
+
 Install all dependencies:
 
 ```
@@ -40,7 +45,6 @@ pip install -r requirements.txt
 Build HurmaDB:
 
 ```
-git clone https://github.com/afiskon/hurmadb.git
 cd hurmadb
 mkdir build
 cd build

@@ -10,6 +10,11 @@ Install all dependencies:
 sudo apt-get install cmake g++ libpcre3-dev librocksdb-dev python3-pip lcov wrk
 ```
 
+Install additional tools for dvelopment:
+```
+sudo apt install clang-format
+```
+
 Install and configure virtualenvwrapper:
 
 ```

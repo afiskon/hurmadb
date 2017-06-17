@@ -88,9 +88,12 @@ void Socket::_bufferedRead() {
             if(res == 0) /* keep this! */
                 throw std::runtime_error("Socket::read() - client closed connection");
 
+            size_t strErrBuffLen = 256;
+            char strErrBuff[strErrBuffLen];
+            const char* strErr = strerror_r(errno, strErrBuff, strErrBuffLen);
             std::ostringstream oss;
-            oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno
-                << " (" << strerror(errno) << ")";
+            oss << "Socket::readLine() - read() failed, res = " << res << ", errno = " << errno << " (" << strErr
+                << ")";
             throw std::runtime_error(oss.str());
         }
     } while(res <= 0);

@@ -4,10 +4,20 @@ Work in progress.
 
 # How to build, test and run
 
+Obtain hurmadb:
+```
+git clone https://github.com/afiskon/hurmadb.git
+```
+
 Install all dependencies:
 
 ```
 sudo apt-get install cmake g++ libpcre3-dev librocksdb-dev python3-pip lcov wrk
+```
+
+Install additional tools for dvelopment:
+```
+sudo apt install clang-format
 ```
 
 Install and configure virtualenvwrapper:
@@ -35,7 +45,6 @@ pip install -r requirements.txt
 Build HurmaDB:
 
 ```
-git clone https://github.com/afiskon/hurmadb.git
 cd hurmadb
 mkdir build
 cd build

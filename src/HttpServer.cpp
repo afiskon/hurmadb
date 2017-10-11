@@ -258,7 +258,7 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
 }
 
 /*
- * If client will close a connection recv() will just return -1
+ * If client will close a connection send() will just return -1
  * instead of killing a process with SIGPIPE.
  */
 void HttpServer::_ignoreSigpipe() {

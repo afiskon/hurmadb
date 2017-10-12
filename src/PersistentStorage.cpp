@@ -3,7 +3,9 @@
 #include <PersistentStorage.h>
 #include <stdexcept>
 #include <string>
+#include "rapidjson/document.h"
 
+using namespace rapidjson;
 using namespace rocksdb;
 
 PersistentStorage::PersistentStorage() {
@@ -25,10 +27,19 @@ PersistentStorage::~PersistentStorage() {
         delete _db;
 }
 
-void PersistentStorage::set(const std::string& key, const std::string& value) {
-    Status s = _db->Put(WriteOptions(), key, value);
-    if(!s.ok())
-        throw std::runtime_error("PersistentStore::set() - _db->Put failed");
+void PersistentStorage::set(const std::string& key, const std::string& value, bool* append) {
+    
+    std::string json = "{ \"" + key + "\": " + value + " }";
+    Document document;
+
+    if(!document.Parse(json.c_str()).HasParseError()){
+        Status s = _db->Put(WriteOptions(), key, value);
+        *append = s.ok();
+        if(!s.ok())
+            throw std::runtime_error("PersistentStore::set() - _db->Put failed");
+    }
+    else
+        *append = false;    
 }
 
 std::string PersistentStorage::get(const std::string& key, bool* found) {

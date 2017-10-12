@@ -53,10 +53,11 @@ static void httpKVGetRangeHandler(const HttpRequest& req, HttpResponse& resp) {
 }
 
 static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {
+    bool append = false;
     const std::string& key = req.getQueryMatch(0);
     const std::string& value = req.getBody();
-    storage.set(key, value);
-    resp.setStatus(HTTP_STATUS_OK);
+    storage.set(key, value, &append);
+    resp.setStatus(append ? HTTP_STATUS_OK : HTTP_STATUS_BAD_REQUEST);
 }
 
 static void httpKVDeleteHandler(const HttpRequest& req, HttpResponse& resp) {

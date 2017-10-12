@@ -77,6 +77,44 @@ class TestBasic:
         # InMemory backend returns 404, RocksDB backend always returns 200
         assert(res.status_code == 200 or res.status_code == 404)
 
+    # Test validation of stored value
+    def test_validation(self):
+        self.log.debug("Running test_validation")
+        url = 'http://localhost:{}/v1/kv/S1'.format(PORT)
+        doc = '"asdag'
+        # Create a new document
+        res = requests.put(url, data = doc)
+        assert(res.status_code == 400)
+
+    # Test range_query on the expected result
+    def test_range_query(self):
+        self.log.debug("Running test_kv2")
+        url1 = 'http://localhost:{}/v1/kv/val2'.format(PORT)
+        doc1 = {'foo':'bar', 'baz':['qux']}
+        url2 = 'http://localhost:{}/v1/kv/val3'.format(PORT)
+        doc2 = 'qwerty'
+        query = 'http://localhost:{}/v1/kv/val1/val4'.format(PORT)
+        
+        # Create a new document
+        res = requests.put(url1, json = doc1)
+        assert(res.status_code == 200)
+        res = requests.put(url2, json = doc2)
+        assert(res.status_code == 200)
+
+        # Check that we receive expended answer 
+        res = requests.get(query)
+        planned_text = '{"val2":{"foo":"bar","baz":["qux"]},"val3":"qwerty"}'
+        assert res.text == planned_text, "Wrong result of query"
+
+        # Delete the document
+        res = requests.delete(url1)
+        assert(res.status_code == 200)
+
+        # Delete the document
+        res = requests.delete(url2)
+        assert(res.status_code == 200)
+
+        
     # Test multiple message exchange during one connection
     def test_keep_alive(self):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -88,3 +126,11 @@ class TestBasic:
         data = conn.recv(1024)
         assert(data.startswith(b"HTTP/1.1 200 OK"))
         conn.close()
+        
+    # Test delete of not existed key
+    def test_delete(self):
+        self.log.debug("Running test_delete")
+        url = 'http://localhost:{}/v1/kv/not_existed_key'.format(PORT)
+        # Delete the document
+        res = requests.delete(url)
+        assert(res.status_code == 404)

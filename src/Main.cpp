@@ -43,17 +43,14 @@ static void httpKVGetHandler(const HttpRequest& req, HttpResponse& resp) {
     resp.setBody(value);
 }
 
-/*
+
 static void httpKVGetRangeHandler(const HttpRequest& req, HttpResponse& resp) {
-    bool found = true;
     const std::string& key_from = req.getQueryMatch(0);
     const std::string& key_to = req.getQueryMatch(1);
-    std::string value = std::string("From ") + key_from + ", to " + key_to;
-    // const std::string& value = storage.get(key, &found);
-    resp.setStatus(found ? HTTP_STATUS_OK : HTTP_STATUS_NOT_FOUND);
+    const std::string& value = storage.getRange(key_from, key_to);
+    resp.setStatus(HTTP_STATUS_OK);
     resp.setBody(value);
 }
-*/
 
 static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {
     const std::string& key = req.getQueryMatch(0);
@@ -63,7 +60,7 @@ static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {
 }
 
 static void httpKVDeleteHandler(const HttpRequest& req, HttpResponse& resp) {
-    bool found;
+    bool found = false;
     const std::string& key = req.getQueryMatch(0);
     storage.del(key, &found);
     resp.setStatus(found ? HTTP_STATUS_OK : HTTP_STATUS_NOT_FOUND);
@@ -91,7 +88,7 @@ int main(int argc, char** argv) {
     server.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
     server.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
     server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVGetHandler);
-//    server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
+    server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
     server.addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
     server.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
 

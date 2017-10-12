@@ -6,9 +6,10 @@
 
 class Storage {
 public:
-    virtual void set(const std::string& key, const std::string& value) = 0;
+    virtual void set(const std::string& key, const std::string& value, bool* append) = 0;
     virtual std::string get(const std::string& key, bool* found) = 0;
     virtual std::string get(const std::string& key);
+    virtual std::string getRange(const std::string& key_from, const std::string& key_to);
     virtual void del(const std::string& key, bool* found) = 0;
     virtual void del(const std::string& key);
 };

@@ -38,6 +38,25 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
     return value;
 }
 
+std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
+    std::string result = "";
+    std::string key = "";
+    rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
+    bool isMoreOne = false;
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        key = it->key().ToString();
+        if((strcmp(key.c_str(), key_from.c_str()) >= 0) && (strcmp(key.c_str(), key_to.c_str()) <= 0))
+        {
+            if(isMoreOne) result += ",";
+
+            result += "{ \"" + key + "\": " + it->value().ToString() + " }";
+            isMoreOne = true;
+        }
+    } 
+
+    return "[" + result + "]";
+}
+
 void PersistentStorage::del(const std::string& key, bool* found) {
     Status s = _db->Delete(WriteOptions(), key);
     *found = s.ok(); // always returns true. TODO fix this + fix the test

@@ -63,16 +63,15 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
     Document result;
     result.SetObject();
 
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    for (it->Seek(key_from);
+         it->Valid() && it->key().ToString() <= key_to;
+         it->Next()) {
         key = it->key().ToString();
-        if((strcmp(key.c_str(), key_from.c_str()) >= 0) && (strcmp(key.c_str(), key_to.c_str()) <= 0))
-        {
-            Value k(key.c_str(), result.GetAllocator());
-            Document v;
-            v.Parse(it->value().ToString().c_str());
-            Value val(v, result.GetAllocator());
-            result.AddMember(k, val, result.GetAllocator());
-        }
+        Value k(key.c_str(), result.GetAllocator());
+        Document v;
+        v.Parse(it->value().ToString().c_str());
+        Value val(v, result.GetAllocator());
+        result.AddMember(k, val, result.GetAllocator());
     } 
 
     StringBuffer sb;

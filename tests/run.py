@@ -126,3 +126,11 @@ class TestBasic:
         data = conn.recv(1024)
         assert(data.startswith(b"HTTP/1.1 200 OK"))
         conn.close()
+        
+    # Test delete of not existed key
+    def test_delete(self):
+        self.log.debug("Running test_kv2")
+        url = 'http://localhost:{}/v1/kv/not_existed_key'.format(PORT)
+        # Delete the document
+        res = requests.delete(url)
+        assert(res.status_code == 404)

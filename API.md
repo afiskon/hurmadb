@@ -74,6 +74,24 @@
   curl -v -XGET localhost:8080/v1/kv/some_key
   ```
 
+## Get range values
+
+  `GET /v1/kv/:key/:key`
+
+* **Successful Response:**
+  
+  * **Code:** `200` <br /> <br />
+    **Content:** `["stored_value"]`
+  
+* **Error Response:**
+
+  * **Code:** `404` <br />
+
+* **Example:**
+  
+  ```  
+  curl -v -XGET localhost:8080/v1/kv/some_key/some_key2
+  ```
 
 ## Delete value
 

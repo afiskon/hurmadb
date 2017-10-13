@@ -69,6 +69,13 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
 }
 
 void PersistentStorage::del(const std::string& key, bool* found) {
+    
+    std::string value = "";
+    Status check = _db->Get(ReadOptions(), key, &value);
+    *found = check.ok();
+    if(!check.ok())
+        return;
     Status s = _db->Delete(WriteOptions(), key);
-    *found = s.ok(); // always returns true. TODO fix this + fix the test
+   
+    *found = s.ok();
 }

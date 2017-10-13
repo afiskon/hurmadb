@@ -47,7 +47,11 @@
 * **Successful Response:**
   
   * **Code:** `200` <br />
+  
+* **Error Response:**
 
+  * **Code:** `400` <br />
+  
 * **Example:**
   
   ```

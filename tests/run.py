@@ -9,10 +9,11 @@ import requests
 import logging
 import time
 import socket
+import sys
 
 START = os.environ.get('HURMADB_PORT') is None
 PORT = int(os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000)))
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 def hurmadb_start(port):
     """

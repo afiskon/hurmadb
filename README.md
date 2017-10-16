@@ -38,6 +38,8 @@ Build HurmaDB:
 ```
 git clone https://github.com/afiskon/hurmadb.git
 cd hurmadb
+git submodule init
+git submodule update
 mkdir build
 cd build
 cmake ..

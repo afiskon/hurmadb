@@ -85,11 +85,7 @@
 * **Successful Response:**
   
   * **Code:** `200` <br /> <br />
-    **Content:** `["stored_value"]`
-  
-* **Error Response:**
-
-  * **Code:** `404` <br />
+    **Content:** `[{"key1":"value1"},{"key2":"value2"}, ... ]`
 
 * **Example:**
   

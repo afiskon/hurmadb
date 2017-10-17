@@ -85,7 +85,7 @@
 * **Successful Response:**
   
   * **Code:** `200` <br /> <br />
-    **Content:** `[{"key1":"value1"},{"key2":"value2"}, ... ]`
+    **Content:** `{"key1":"value1","key2":"value2", ... }`
 
 * **Example:**
   

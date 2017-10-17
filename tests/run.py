@@ -103,7 +103,7 @@ class TestBasic:
 
         # Check that we receive expended answer 
         res = requests.get(query)
-        planned_text = '[{ "val2": {"foo": "bar", "baz": ["qux"]} },{ "val3": "qwerty" }]'
+        planned_text = '{"val2":{"foo":"bar","baz":["qux"]},"val3":"qwerty"}'
         assert res.text == planned_text, "Wrong result of query"
 
         # Delete the document
@@ -129,7 +129,7 @@ class TestBasic:
         
     # Test delete of not existed key
     def test_delete(self):
-        self.log.debug("Running test_kv2")
+        self.log.debug("Running test_delete")
         url = 'http://localhost:{}/v1/kv/not_existed_key'.format(PORT)
         # Delete the document
         res = requests.delete(url)

@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include <rapidjson/writer.h>
 
 using namespace rapidjson;
 using namespace rocksdb;
@@ -29,11 +31,16 @@ PersistentStorage::~PersistentStorage() {
 
 void PersistentStorage::set(const std::string& key, const std::string& value, bool* append) {
     
-    std::string json = "{ \"" + key + "\": " + value + " }";
-    Document document;
+    Document val;
 
-    if(!document.Parse(json.c_str()).HasParseError()){
-        Status s = _db->Put(WriteOptions(), key, value);
+    if(!val.Parse(value.c_str()).HasParseError()){
+
+        StringBuffer sb;
+        Writer<StringBuffer> writer(sb);
+
+        val.Accept(writer);
+
+        Status s = _db->Put(WriteOptions(), key, sb.GetString());
         *append = s.ok();
         if(!s.ok())
             throw std::runtime_error("PersistentStore::set() - _db->Put failed");
@@ -50,22 +57,29 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
 }
 
 std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
-    std::string result = "";
     std::string key = "";
     rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
-    bool isMoreOne = false;
+  
+    Document result;
+    result.SetObject();
+
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         key = it->key().ToString();
         if((strcmp(key.c_str(), key_from.c_str()) >= 0) && (strcmp(key.c_str(), key_to.c_str()) <= 0))
         {
-            if(isMoreOne) result += ",";
-
-            result += "{ \"" + key + "\": " + it->value().ToString() + " }";
-            isMoreOne = true;
+            Value k(key.c_str(), result.GetAllocator());
+            Document v;
+            v.Parse(it->value().ToString().c_str());
+            Value val(v, result.GetAllocator());
+            result.AddMember(k, val, result.GetAllocator());
         }
     } 
 
-    return "[" + result + "]";
+    StringBuffer sb;
+    Writer<StringBuffer> writer(sb);
+    result.Accept(writer);
+
+    return sb.GetString();
 }
 
 void PersistentStorage::del(const std::string& key, bool* found) {

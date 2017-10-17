@@ -55,7 +55,7 @@
 * **Example:**
   
   ```
-  curl -v -XPUT -d 'some_value' localhost:8080/v1/kv/some_key  
+  curl -v -XPUT -d '{ "some_subkey" : "some_value" }' localhost:8080/v1/kv/some_key  
   ```
 
 

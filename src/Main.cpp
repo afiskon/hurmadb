@@ -1,6 +1,7 @@
 /* vim: set ai et ts=4 sw=4: */
 
 #include <HttpServer.h>
+#include <PersistentStorage.h>
 #include <atomic>
 #include <iostream>
 #include <map>
@@ -8,7 +9,6 @@
 #include <sstream>
 #include <string>
 #include <utility>
-#include <PersistentStorage.h>
 
 // TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
 // incremental backups and replication. Write
@@ -40,7 +40,6 @@ static void httpKVGetHandler(const HttpRequest& req, HttpResponse& resp) {
     resp.setStatus(found ? HTTP_STATUS_OK : HTTP_STATUS_NOT_FOUND);
     resp.setBody(value);
 }
-
 
 static void httpKVGetRangeHandler(const HttpRequest& req, HttpResponse& resp) {
     const std::string& key_from = req.getQueryMatch(0);

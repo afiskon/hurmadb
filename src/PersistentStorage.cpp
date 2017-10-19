@@ -34,13 +34,7 @@ void PersistentStorage::set(const std::string& key, const std::string& value, bo
     Document val;
 
     if(!val.Parse(value.c_str()).HasParseError()) {
-
-        StringBuffer sb;
-        Writer<StringBuffer> writer(sb);
-
-        val.Accept(writer);
-
-        Status s = _db->Put(WriteOptions(), key, sb.GetString());
+        Status s = _db->Put(WriteOptions(), key, value);
         *append = s.ok();
         if(!s.ok())
             throw std::runtime_error("PersistentStore::set() - _db->Put failed");

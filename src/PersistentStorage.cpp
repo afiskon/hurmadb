@@ -1,8 +1,8 @@
 /* vim: set ai et ts=4 sw=4: */
 
+#include "defer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
-#include "defer.h"
 #include <PersistentStorage.h>
 #include <rapidjson/writer.h>
 #include <stdexcept>

@@ -2,6 +2,7 @@
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
+#include "defer.h"
 #include <PersistentStorage.h>
 #include <rapidjson/writer.h>
 #include <stdexcept>
@@ -50,8 +51,9 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
 // TODO: impelemt more efficient interation for wide ranges
 std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
     rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
-    Document result;
+    defer(delete it);
 
+    Document result;
     result.SetObject();
 
     for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {

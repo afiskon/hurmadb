@@ -56,7 +56,7 @@ Run a benchmark:
 
 ```
 ./hurmadb 8080
-curl -XPUT -d 'SomeRandomData123' localhost:8080/v1/kv/123 -D - -o -
+curl -XPUT -d '{"Some":"RandomData123"}' localhost:8080/v1/kv/123 -D - -o -
 wrk -t10 -c10 -d10s http://localhost:8080/v1/kv/123
 ```
 

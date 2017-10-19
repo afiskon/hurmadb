@@ -71,6 +71,6 @@ template <typename Func>
 auto make_guard(Func&& f) -> scope_guard<Func> {
     return scope_guard<Func>(std::forward<Func>(f));
 }
-}
+} // namespace stdex
 
 #endif

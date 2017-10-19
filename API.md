@@ -47,11 +47,15 @@
 * **Successful Response:**
   
   * **Code:** `200` <br />
+  
+* **Error Response:**
 
+  * **Code:** `400` <br />
+  
 * **Example:**
   
   ```
-  curl -v -XPUT -d 'some_value' localhost:8080/v1/kv/some_key  
+  curl -v -XPUT -d '{ "some_subkey" : "some_value" }' localhost:8080/v1/kv/some_key  
   ```
 
 
@@ -74,6 +78,20 @@
   curl -v -XGET localhost:8080/v1/kv/some_key
   ```
 
+## Get range values
+
+  `GET /v1/kv/:key/:key`
+
+* **Successful Response:**
+  
+  * **Code:** `200` <br /> <br />
+    **Content:** `{"key1":"value1","key2":"value2", ... }`
+
+* **Example:**
+  
+  ```  
+  curl -v -XGET localhost:8080/v1/kv/some_key/some_key2
+  ```
 
 ## Delete value
 

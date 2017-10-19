@@ -8,7 +8,6 @@
 #include <sstream>
 #include <string>
 #include <utility>
-//#include <InMemoryStorage.h>
 #include <PersistentStorage.h>
 
 // TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
@@ -22,7 +21,6 @@
 
 // TODO: Keyspaces class
 
-// InMemoryStorage storage;
 PersistentStorage storage;
 
 static std::atomic_bool terminate_flag(false);

@@ -55,6 +55,7 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
     return value;
 }
 
+// TODO: impelemt more efficient interation for wide ranges
 std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
     std::string key = "";
     rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());

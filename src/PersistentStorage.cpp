@@ -29,17 +29,15 @@ PersistentStorage::~PersistentStorage() {
         delete _db;
 }
 
-void PersistentStorage::set(const std::string& key, const std::string& value, bool* append) {
-
+void PersistentStorage::set(const std::string& key, const std::string& value) {
     Document val;
 
-    if(!val.Parse(value.c_str()).HasParseError()) {
-        Status s = _db->Put(WriteOptions(), key, value);
-        *append = s.ok();
-        if(!s.ok())
-            throw std::runtime_error("PersistentStore::set() - _db->Put failed");
-    } else
-        *append = false;
+    if(val.Parse(value.c_str()).HasParseError())
+        throw std::runtime_error("PersistentStore::set() - validation failed");
+
+    Status s = _db->Put(WriteOptions(), key, value);
+    if(!s.ok())
+        throw std::runtime_error("PersistentStore::set() - _db->Put failed");
 }
 
 std::string PersistentStorage::get(const std::string& key, bool* found) {
@@ -53,8 +51,8 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
 std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
     std::string key = "";
     rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
-
     Document result;
+
     result.SetObject();
 
     for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {
@@ -74,7 +72,6 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
 }
 
 void PersistentStorage::del(const std::string& key, bool* found) {
-
     std::string value = "";
     Status check = _db->Get(ReadOptions(), key, &value);
     *found = check.ok();

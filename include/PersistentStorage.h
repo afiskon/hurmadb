@@ -14,7 +14,7 @@ public:
 
     PersistentStorage();
     ~PersistentStorage();
-    void set(const std::string& key, const std::string& value, bool* append);
+    void set(const std::string& key, const std::string& value);
     std::string get(const std::string& key, bool* found);
     std::string getRange(const std::string& key_from, const std::string& key_to);
     void del(const std::string& key, bool* found);

@@ -20,7 +20,7 @@ PersistentStorage::PersistentStorage() {
     options.OptimizeLevelStyleCompaction();
     options.create_if_missing = true;
 
-    Status s = rocksdb::DB::Open(options, "hurma_data", &_db);
+    Status s = DB::Open(options, "hurma_data", &_db);
     if(!s.ok())
         throw std::runtime_error("PersistentStorage::PersistentStorage() - DB::Open failed");
 }
@@ -50,7 +50,7 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
 
 // TODO: impelemt more efficient interation for wide ranges
 std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
-    rocksdb::Iterator* it = _db->NewIterator(rocksdb::ReadOptions());
+    Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);
 
     Document result;

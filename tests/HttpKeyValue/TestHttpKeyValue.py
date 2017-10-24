@@ -20,7 +20,7 @@ def hurmadb_start(port):
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['./hurmadb', str(port)])
+        return subprocess.Popen(['../../hurmadb', str(port)])
     else:
         return None
 

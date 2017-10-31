@@ -1,5 +1,6 @@
 /* vim: set ai et ts=4 sw=4: */
 
+#include <TcpServer.h>
 #include <HttpServer.h>
 #include <RegexCache.h>
 #include <Socket.h>
@@ -211,23 +212,17 @@ void HttpWorker::run() {
  **********************************************************************
  */
 
-HttpServer::HttpServer()
-  : _listen_done(false)
-  , _listen_socket(-1)
-  , _workersCounter(0)
-  , _handlers(nullptr) {
+HttpServer::HttpServer()  
+  : _handlers(nullptr) 
+  , _workersCounter(0){
 }
 
-HttpServer::~HttpServer() {
-    // TODO: add timeout here and kill workers using pthread_kill if necessary
 
-    /* wait for running workers */
+HttpServer::~HttpServer() {
+
     while(_workersCounter.load() > 0) {
         usleep(10 * 1000); /* wait 10 ms */
     }
-
-    if(_listen_done)
-        close(_listen_socket);
 
     while(_handlers != nullptr) {
         HttpHandlerListItem* next = _handlers->next;
@@ -236,6 +231,7 @@ HttpServer::~HttpServer() {
         _handlers = next;
     }
 }
+
 
 void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler) {
     const char* error;
@@ -257,68 +253,8 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
     _handlers = item;
 }
 
-/*
- * If client will close a connection send() will just return -1
- * instead of killing a process with SIGPIPE.
- */
-void HttpServer::_ignoreSigpipe() {
-    sigset_t msk;
-    sigemptyset(&msk);
-    sigaddset(&msk, SIGPIPE);
-    if(pthread_sigmask(SIG_BLOCK, &msk, nullptr) != 0)
-        throw std::runtime_error("HttpServer::_ignoreSigpipe() - pthread_sigmask() call failed");
-}
-
-void HttpServer::listen(const char* host, int port) {
-    struct sockaddr_in addr;
-
-    _ignoreSigpipe();
-
-    _listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if(_listen_socket == -1)
-        throw std::runtime_error("HttpServer::listen() - socket() call failed");
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(host);
-    if(bind(_listen_socket, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-        throw std::runtime_error("HttpServer::listen() - bind() call failed");
-
-    if(::listen(_listen_socket, 100) == -1)
-        throw std::runtime_error("HttpServer::listen() - listen() call failed");
-
-    _listen_done = true;
-}
-
-/* One iteration of accept loop */
-void HttpServer::accept(const std::atomic_bool& terminate_flag) {
-    for(;;) {
-        struct timeval tv; /* we have to re-initialize these structures every time */
-        tv.tv_sec = 1L;
-        tv.tv_usec = 0;
-
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(_listen_socket, &rfds);
-
-        int res = select(_listen_socket + 1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
-        if(res > 0) /* ready to accept() */
-            break;
-
-        if(res < 0) { /* error */
-            if(errno == EINTR)
-                continue;
-            throw std::runtime_error("HttpServer::accept() - select() call failed: " + std::string(strerror(errno)));
-        }
-
-        /* timeout - check a terminate flag */
-        if(terminate_flag.load())
-            return;
-    }
-
-    int accepted_socket = ::accept(_listen_socket, 0, 0);
-    if(accepted_socket == -1)
-        throw std::runtime_error("HttpServer::accept() - accept() call failed");
+void HttpServer::newThread(int accepted_socket){
+  
 
     // disable TCP Nagle's algorithm
     int val = 1;

@@ -8,15 +8,11 @@
 #include <stdexcept>
 #include <string>
 
-typedef void (*HttpRequestHandler)();
 
 /* For internal usage only! */
-struct TcpHandlerListItem {
-    TcpHandlerListItem* next;
-    pcre* regexp;
-    HttpRequestHandler handler;
-};
 
+
+/*
 class TcpWorker {
 public:
     TcpWorker(Socket& socket, TcpHandlerListItem* handlersList);
@@ -28,13 +24,14 @@ private:
 
     void _TCPRequest(Socket& socket);
 };
-
+*/
 class TcpServer {
 public:
     TcpServer();
     ~TcpServer();
     void listen(const char* host, int port);
     void accept(const std::atomic_bool& terminate_flag);
+    virtual void newThread(int accepted_socket){ throw std::runtime_error("HttpServer::accept() - malloc() call failed"+accepted_socket); };
 
     TcpServer(TcpServer const&) = delete;
     void operator=(TcpServer const&) = delete;
@@ -42,8 +39,5 @@ public:
 private:
     bool _listen_done;
     int _listen_socket;
-    std::atomic_int _workersCounter;
-    TcpHandlerListItem* _handlers;
-
     void _ignoreSigpipe();
 };

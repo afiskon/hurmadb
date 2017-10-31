@@ -50,7 +50,6 @@ static void httpKVGetRangeHandler(const HttpRequest& req, HttpResponse& resp) {
 }
 
 static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {
-    bool append = false;
     const std::string& key = req.getQueryMatch(0);
     const std::string& value = req.getBody();
     bool ok = true;

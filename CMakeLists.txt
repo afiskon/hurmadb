@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 
 add_executable(hurmadb src/Main.cpp src/Socket.cpp
   src/Storage.cpp src/PersistentStorage.cpp
-  src/HttpServer.cpp src/TcpServer.cpp src/PgsqlServer.cpp src/HttpRequest.cpp src/HttpResponse.cpp src/RegexCache.cpp)
+  src/HttpServer.cpp src/TcpServer.cpp src/HttpRequest.cpp src/HttpResponse.cpp src/RegexCache.cpp)
 
 target_link_libraries(hurmadb ${PTHREAD_LIBRARY} ${PCRE_LIBRARY} ${ROCKSDB_LIBRARY})
 

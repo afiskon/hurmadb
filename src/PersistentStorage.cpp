@@ -7,9 +7,6 @@
 #include <rapidjson/writer.h>
 #include <stdexcept>
 #include <string>
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include <rapidjson/writer.h>
 
 using namespace rapidjson;
 using namespace rocksdb;
@@ -83,7 +80,6 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
 }
 
 void PersistentStorage::del(const std::string& key, bool* found) {
-
     std::string value = "";
     Status s = _db->Get(ReadOptions(), key, &value);
     *found = s.ok();

@@ -9,8 +9,8 @@
 class PersistentStorage : public Storage {
 public:
     /* un-shadow parent class methods */
-    using Storage::get;
     using Storage::del;
+    using Storage::get;
 
     PersistentStorage();
     ~PersistentStorage();

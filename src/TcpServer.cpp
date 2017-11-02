@@ -28,12 +28,18 @@
  **********************************************************************
  */
 
-TcpServer::TcpServer()
+TcpServer::TcpServer(void* (*WorkerThreadProc)(void* rawArg))
   : _listen_done(false)
   , _listen_socket(-1)
-{}
+  , _workersCounter(0)
+{
+    TcpWorkerThreadProc = WorkerThreadProc;
+}
 
 TcpServer::~TcpServer() {
+    while(_workersCounter.load() > 0) {
+        usleep(10 * 1000); /* wait 10 ms */
+    }
     if(_listen_done)
         close(_listen_socket);
 }
@@ -94,9 +100,31 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
             return;
     }
 
-      int accepted_socket = ::accept(_listen_socket, 0, 0);
+    int accepted_socket = ::accept(_listen_socket, 0, 0);
     if(accepted_socket == -1)
-        throw std::runtime_error("HttpServer::accept() - accept() call failed");
+        throw std::runtime_error("TcpServer::accept() - accept() call failed");
 
-    newThread(accepted_socket);
+        // disable TCP Nagle's algorithm
+    int val = 1;
+    if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) < 0) {
+        close(accepted_socket);
+        throw std::runtime_error("TcpServer::accept() - setsockopt(2) error");
+    }
+
+    void* arg = createWTPArg(accepted_socket, &_workersCounter);
+  
+    /*
+     * We need to increase workersCounter in the parent process to prevent race
+     * condition. Otherwise it's possible that parent process will terminate
+     * before child process increments a counter.
+     */
+    _workersCounter++;
+
+    pthread_t thr;
+    if(pthread_create(&thr, nullptr, TcpWorkerThreadProc, (void*)arg) != 0) {
+        _workersCounter--;
+        close(accepted_socket);
+        delete &arg;
+        throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
+    }
 }

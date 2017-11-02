@@ -53,13 +53,12 @@ public:
     HttpServer();    
     ~HttpServer();
     void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
-    virtual void newThread(int accepted_socket);
+    virtual void* createWTPArg(int accepted_socket, std::atomic_int* workersCounter);
 
     HttpServer(HttpServer const&) = delete;
     void operator=(HttpServer const&) = delete;
 
 private:
     HttpHandlerListItem* _handlers;
-    std::atomic_int _workersCounter;
     void _ignoreSigpipe();
 };

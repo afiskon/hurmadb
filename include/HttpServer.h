@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <TcpServer.h>
 #include <HttpRequest.h>
 #include <HttpResponse.h>
 #include <Socket.h>
@@ -47,22 +48,17 @@ private:
     void _deserializeHttpRequest(Socket& socket, HttpRequest& req);
 };
 
-class HttpServer {
+class HttpServer : public TcpServer {
 public:
-    HttpServer();
+    HttpServer();    
     ~HttpServer();
     void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
-    void listen(const char* host, int port);
-    void accept(const std::atomic_bool& terminate_flag);
+    virtual void* createWTPArg(int accepted_socket, std::atomic_int* workersCounter);
 
     HttpServer(HttpServer const&) = delete;
     void operator=(HttpServer const&) = delete;
 
 private:
-    bool _listen_done;
-    int _listen_socket;
-    std::atomic_int _workersCounter;
     HttpHandlerListItem* _handlers;
-
     void _ignoreSigpipe();
 };

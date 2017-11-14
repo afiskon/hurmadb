@@ -53,7 +53,7 @@ public:
     HttpServer();    
     ~HttpServer();
     void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
-    virtual void* createWTPArg(int accepted_socket, std::atomic_int* workersCounter);
+    virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter);
 
     HttpServer(HttpServer const&) = delete;
     void operator=(HttpServer const&) = delete;

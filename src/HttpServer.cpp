@@ -45,7 +45,7 @@ static void _httpNotFoundHandler(const HttpRequest&, HttpResponse& resp) {
     resp.setStatus(HTTP_STATUS_NOT_FOUND);
 }
 
-static void* HttpWorkerThreadProc(void* rawArg) {
+static void* _httpWorkerThreadProc(void* rawArg) {
     HttpWorkerThreadProcArg* arg = (HttpWorkerThreadProcArg*)rawArg;
     std::atomic_int& workersCounter = *arg->workersCounter;
 
@@ -212,7 +212,7 @@ void HttpWorker::run() {
  **********************************************************************
  */
 
-HttpServer::HttpServer(): TcpServer(&HttpWorkerThreadProc)  
+HttpServer::HttpServer(): TcpServer(&_httpWorkerThreadProc)  
   , _handlers(nullptr) {
 
 }
@@ -248,7 +248,7 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
     _handlers = item;
 }
 
-void* HttpServer::createWTPArg(int accepted_socket, std::atomic_int* workersCounter){
+void* HttpServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter){
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {
         close(accepted_socket);

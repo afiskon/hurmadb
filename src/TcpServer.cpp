@@ -28,12 +28,12 @@
  **********************************************************************
  */
 
-TcpServer::TcpServer(void* (*WorkerThreadProc)(void* rawArg))
+TcpServer::TcpServer(void* (*workerThreadProc)(void*))
   : _listen_done(false)
   , _listen_socket(-1)
   , _workersCounter(0)
+  , _tcpWorkerThreadProc(workerThreadProc)
 {
-    TcpWorkerThreadProc = WorkerThreadProc;
 }
 
 TcpServer::~TcpServer() {
@@ -111,7 +111,7 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
         throw std::runtime_error("TcpServer::accept() - setsockopt(2) error");
     }
 
-    void* arg = createWTPArg(accepted_socket, &_workersCounter);
+    void* arg = createWorkerThreadProcArg(accepted_socket, &_workersCounter);
   
     /*
      * We need to increase workersCounter in the parent process to prevent race
@@ -121,7 +121,7 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
     _workersCounter++;
 
     pthread_t thr;
-    if(pthread_create(&thr, nullptr, TcpWorkerThreadProc, (void*)arg) != 0) {
+    if(pthread_create(&thr, nullptr, _tcpWorkerThreadProc, (void*)arg) != 0) {
         _workersCounter--;
         close(accepted_socket);
         delete &arg;

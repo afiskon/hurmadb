@@ -1,9 +1,9 @@
 /* vim: set ai et ts=4 sw=4: */
 
-#include <TcpServer.h>
 #include <HttpServer.h>
 #include <RegexCache.h>
 #include <Socket.h>
+#include <TcpServer.h>
 #include <arpa/inet.h>
 #include <atomic>
 #include <defer.h>
@@ -212,11 +212,10 @@ void HttpWorker::run() {
  **********************************************************************
  */
 
-HttpServer::HttpServer(): TcpServer(&_httpWorkerThreadProc)  
+HttpServer::HttpServer()
+  : TcpServer(&_httpWorkerThreadProc)
   , _handlers(nullptr) {
-
 }
-
 
 HttpServer::~HttpServer() {
     while(_handlers != nullptr) {
@@ -226,7 +225,6 @@ HttpServer::~HttpServer() {
         _handlers = next;
     }
 }
-
 
 void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler) {
     const char* error;
@@ -248,7 +246,7 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
     _handlers = item;
 }
 
-void* HttpServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter){
+void* HttpServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter) {
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {
         close(accepted_socket);

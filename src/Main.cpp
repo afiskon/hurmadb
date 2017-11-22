@@ -1,5 +1,6 @@
 /* vim: set ai et ts=4 sw=4: */
 
+#include <PgsqlServer.h>
 #include <HttpServer.h>
 #include <PersistentStorage.h>
 #include <atomic>
@@ -88,19 +89,31 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    HttpServer server;
-    server.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
-    server.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
-    server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVGetHandler);
-    server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
-    server.addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
-    server.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
+    if(port == 5432) {
+        PgsqlServer server;
 
-    server.listen("127.0.0.1", port);
+        server.listen("127.0.0.1", port);
 
-    while(!terminate_flag.load()) {
-        server.accept(terminate_flag);
+        while(!terminate_flag.load()) {
+            server.accept(terminate_flag);
+        }
     }
+    else{
+        HttpServer server;
 
+        server.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
+        server.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
+        server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVGetHandler);
+        server.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
+        server.addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
+        server.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
+
+        server.listen("127.0.0.1", port);
+
+        while(!terminate_flag.load()) {
+            server.accept(terminate_flag);
+        }
+    }
+    
     return 0;
 }

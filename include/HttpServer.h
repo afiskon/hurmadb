@@ -3,15 +3,12 @@
 #pragma once
 
 #include <TcpServer.h>
-#include <HttpRequest.h>
-#include <HttpResponse.h>
+#include <HttpRequestHandler.h>
 #include <Socket.h>
 #include <atomic>
 #include <pcre.h>
 #include <stdexcept>
 #include <string>
-
-typedef void (*HttpRequestHandler)(const HttpRequest& req, HttpResponse& resp);
 
 /* For internal usage only! */
 struct HttpHandlerListItem {
@@ -52,13 +49,12 @@ class HttpServer : public TcpServer {
 public:
     HttpServer();    
     ~HttpServer();
-    void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
-    virtual void* createWTPArg(int accepted_socket, std::atomic_int* workersCounter);
+    virtual void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler);
+    virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter);
 
     HttpServer(HttpServer const&) = delete;
     void operator=(HttpServer const&) = delete;
 
 private:
     HttpHandlerListItem* _handlers;
-    void _ignoreSigpipe();
 };

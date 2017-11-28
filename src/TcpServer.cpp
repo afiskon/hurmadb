@@ -106,12 +106,12 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
 
         // disable TCP Nagle's algorithm
     int val = 1;
-    if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) < 0) {
+    if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY | SO_REUSEADDR, &val, sizeof(val)) < 0) {
         close(accepted_socket);
         throw std::runtime_error("TcpServer::accept() - setsockopt(2) error");
     }
 
-    void* arg = createWTPArg(accepted_socket, &_workersCounter);
+    void* arg = createWorkerThreadProcArg(accepted_socket, &_workersCounter);
   
     /*
      * We need to increase workersCounter in the parent process to prevent race

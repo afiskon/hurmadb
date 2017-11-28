@@ -27,11 +27,11 @@ include_directories(
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-sign-compare -Werror")
 
 add_executable(hurmadb src/Main.cpp src/Socket.cpp
   src/Storage.cpp src/PersistentStorage.cpp
-  src/HttpServer.cpp src/TcpServer.cpp src/HttpRequest.cpp src/HttpResponse.cpp src/RegexCache.cpp)
+  src/HttpServer.cpp src/PgsqlServer.cpp src/TcpServer.cpp src/HttpRequest.cpp src/HttpResponse.cpp src/RegexCache.cpp)
 
 target_link_libraries(hurmadb ${PTHREAD_LIBRARY} ${PCRE_LIBRARY} ${ROCKSDB_LIBRARY})
 

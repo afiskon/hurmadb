@@ -60,5 +60,4 @@ public:
 
 private:
     HttpHandlerListItem* _handlers;
-    void _ignoreSigpipe();
 };

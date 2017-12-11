@@ -27,7 +27,7 @@ include_directories(
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-sign-compare -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 
 add_executable(hurmadb src/Main.cpp src/Socket.cpp
   src/Storage.cpp src/PersistentStorage.cpp

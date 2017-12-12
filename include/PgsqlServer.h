@@ -47,7 +47,7 @@ private:
 
     const char* ERROR_RESPONSE_KEY = "E";
 
-    const char* NOTICE_RESPONSE_KEY = "N";
+    const char NOTICE_RESPONSE_KEY = 'N';
 
     const char ROW_DESCRIPTION_KEY[1] = {'T'}; 
 

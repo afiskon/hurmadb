@@ -294,6 +294,7 @@ void PgsqlWorker::sendDeleteQueryResult(int num_of_rows){
      writeSizeOfBlock(sizeof(uint32_t) + strlen(TRANZACTION_BLOCK_KEY));
     _socket.write((char*) TRANZACTION_BLOCK_KEY, strlen(TRANZACTION_BLOCK_KEY));   
 }
+
 /*
 Send to client next message: 
     C...UPDATE.num_of_rows.Z...T
@@ -331,33 +332,34 @@ void PgsqlWorker::run() {
     const regex insert_query_pattern("^INSERT.*");
     const regex update_query_pattern("^UPDATE.*");
     const regex delete_query_pattern("^DELETE.*");
+    const unsigned char pass_delimiter[1]={0xDE};
+    const unsigned char pass_type[1]={_AUTH_REQ(AUTH_REQ_MD5)};
+    const unsigned char noise[2]={0xF9, 0xF9};
     cmatch cm;
     char key;
     char* received_message;
 
     received_message = readMessage();
             
-    _socket.write("N");
+    _socket.write((char*) &NOTICE_RESPONSE_KEY, sizeof(NOTICE_RESPONSE_KEY));
 
     received_message = readMessage();
 
     _socket.write(RESPONSE_MESSAGE_KEY,sizeof(RESPONSE_MESSAGE_KEY));
 
-    //Not meaning end 
-    unsigned char answer[1]={0xDE};
+    writeSizeOfBlock(
+        sizeof(uint32_t) + 
+        sizeof(uint32_t) + 
+        sizeof(pass_delimiter) + 
+        sizeof(pass_type) + 
+        sizeof(noise)
+        );
 
+    writeSizeOfBlock(sizeof(uint32_t) + sizeof(pass_delimiter));
 
-
-    unsigned char answer2[3]={_AUTH_REQ(AUTH_REQ_MD5), 0xF9, 0xF9};
-
-    writeSizeOfBlock(sizeof(uint32_t) + sizeof(answer2));
-
-    writeSizeOfBlock(sizeof(uint32_t) + sizeof(answer));
-
-    _socket.read((char*) answer, sizeof(answer));
-
-    _socket.write((char*) answer2, sizeof(answer2));
-
+    _socket.write((char*) pass_delimiter, sizeof(pass_delimiter));
+    _socket.write((char*) pass_type, sizeof(pass_type));
+    _socket.write((char*) noise, sizeof(noise));
     _socket.read(&key, sizeof(key));
 
     getMessageSize();

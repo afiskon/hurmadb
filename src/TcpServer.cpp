@@ -75,55 +75,51 @@ void TcpServer::listen(const char* host, int port) {
 
 /* One iteration of accept loop */
 void TcpServer::accept(const std::atomic_bool& terminate_flag) {
-    for(;;) {
-        struct timeval tv; /* we have to re-initialize these structures every time */
-        tv.tv_sec = 1L;
-        tv.tv_usec = 0;
+    struct timeval tv; /* we have to re-initialize these structures every time */
+    tv.tv_sec = 1L;
+    tv.tv_usec = 0;
 
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(_listen_socket, &rfds);
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(_listen_socket, &rfds);
 
-        int res = select(_listen_socket + 1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
-        if(res > 0) /* ready to accept() */
-            break;
+    int res = select(_listen_socket + 1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
+    if(res > 0){
+        int accepted_socket = ::accept(_listen_socket, 0, 0);
+        if(accepted_socket == -1)
+            throw std::runtime_error("TcpServer::accept() - accept() call failed");
 
-        if(res < 0) { /* error */
-            if(errno == EINTR)
-                continue;
-            throw std::runtime_error("TcpServer::accept() - select() call failed: " + std::string(strerror(errno)));
+        // disable TCP Nagle's algorithm
+        int val = 1;
+        if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY | SO_REUSEADDR, &val, sizeof(val)) < 0) {
+            close(accepted_socket);
+            throw std::runtime_error("TcpServer::accept() - setsockopt(2) error");
         }
 
-        /* timeout - check a terminate flag */
-        if(terminate_flag.load())
-            return;
-    }
+        void* arg = createWorkerThreadProcArg(accepted_socket, &_workersCounter);
 
-    int accepted_socket = ::accept(_listen_socket, 0, 0);
-    if(accepted_socket == -1)
-        throw std::runtime_error("TcpServer::accept() - accept() call failed");
+        /*
+         * We need to increase workersCounter in the parent process to prevent race
+         * condition. Otherwise it's possible that parent process will terminate
+         * before child process increments a counter.
+         */
+        _workersCounter++;
 
-    // disable TCP Nagle's algorithm
-    int val = 1;
-    if(setsockopt(accepted_socket, IPPROTO_TCP, TCP_NODELAY | SO_REUSEADDR, &val, sizeof(val)) < 0) {
-        close(accepted_socket);
-        throw std::runtime_error("TcpServer::accept() - setsockopt(2) error");
-    }
+        pthread_t thr;
+        if(pthread_create(&thr, nullptr, _tcpWorkerThreadProc, (void*)arg) != 0) {
+            _workersCounter--;
+            close(accepted_socket);
+            delete &arg;
+            throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
+        }
+    } /* ready to accept() */
 
-    void* arg = createWorkerThreadProcArg(accepted_socket, &_workersCounter);
+    else if(res < 0 && errno != EINTR) /* error */
+        throw std::runtime_error("TcpServer::accept() - select() call failed: " + std::string(strerror(errno)));
 
-    /*
-     * We need to increase workersCounter in the parent process to prevent race
-     * condition. Otherwise it's possible that parent process will terminate
-     * before child process increments a counter.
-     */
-    _workersCounter++;
+    /* timeout - check a terminate flag */
+    else if(terminate_flag.load())
+        return;
 
-    pthread_t thr;
-    if(pthread_create(&thr, nullptr, _tcpWorkerThreadProc, (void*)arg) != 0) {
-        _workersCounter--;
-        close(accepted_socket);
-        delete &arg;
-        throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
-    }
+
 }

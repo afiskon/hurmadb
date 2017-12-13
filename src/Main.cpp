@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <unistd.h>
 
 // TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
 // incremental backups and replication. Write
@@ -79,38 +80,49 @@ static void httpStopPutHandler(const HttpRequest&, HttpResponse& resp) {
 }
 
 int main(int argc, char** argv) {
-    if(argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <port>" << std::endl;
-        return 1;
+
+    int c;
+    int httpPort = 8080;
+    int pgsqlPort = 5432;
+
+    while ((c = getopt (argc, argv, "p:h:")) != -1)
+    switch (c) {
+        case 'h':
+        httpPort = atoi(optarg);
+        break;
+        case 'p':
+        pgsqlPort = atoi(optarg);
+        break;
     }
 
-    int port = atoi(argv[1]);
-    if(port <= 0 || port >= 65536) {
-        std::cerr << "Invalid port number!" << std::endl;
+
+    if(httpPort <= 0 || httpPort >= 65536) {
+        std::cerr << "Invalid httpPort number!" << std::endl;
         return 2;
     }
 
-    TcpServer* serv;
-
-    if(port == 5432) {
-        serv = new PgsqlServer(&terminate_flag);
-    }
-    
-    else{
-        serv = new HttpServer();
-
-        serv->addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
-        serv->addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
-        serv->addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVGetHandler);
-        serv->addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
-        serv->addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
-        serv->addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
+    if(pgsqlPort <= 0 || pgsqlPort >= 65536) {
+        std::cerr << "Invalid pgsqlPort number!" << std::endl;
+        return 2;
     }
 
-    serv->listen("127.0.0.1", port);
+    HttpServer httpServer;
+
+    PgsqlServer pgsqlServer(&terminate_flag);
+
+    httpServer.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
+    httpServer.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
+    httpServer.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVGetHandler);
+    httpServer.addHandler(HTTP_GET, "(?i)^/v1/kv/([\\w-]+)/([\\w-]+)/?$", &httpKVGetRangeHandler);
+    httpServer.addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
+    httpServer.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
+
+    pgsqlServer.listen("127.0.0.1", pgsqlPort);
+    httpServer.listen("127.0.0.1", httpPort);
 
     while(!terminate_flag.load()) {
-        serv->accept(terminate_flag);
+        pgsqlServer.accept(terminate_flag);
+        httpServer.accept(terminate_flag);
     }
     
     return 0;

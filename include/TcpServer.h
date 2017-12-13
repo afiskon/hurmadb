@@ -16,13 +16,8 @@ public:
     ~TcpServer();
     void listen(const char* host, int port);
     void accept(const std::atomic_bool& terminate_flag);
-    virtual void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler) = 0;
-
     TcpServer(TcpServer const&) = delete;
     void operator=(TcpServer const&) = delete;
-
-    void listen(const char* host, int port);
-    void accept(const std::atomic_bool& terminate_flag);
 
 protected:
     virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter) = 0;

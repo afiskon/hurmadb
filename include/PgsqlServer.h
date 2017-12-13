@@ -45,7 +45,7 @@ private:
 
     const char* EMPTY_QUERY_RESPONSE_KEY = "I";
 
-    const char* ERROR_RESPONSE_KEY = "E";
+    const char ERROR_RESPONSE_KEY = 'E';
 
     const char NOTICE_RESPONSE_KEY = 'N';
 
@@ -87,12 +87,6 @@ public:
     PgsqlServer(std::atomic_bool* terminate_flag);
     ~PgsqlServer();
     virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter);
-    virtual void addHandler(HttpMethod method, const char* regexpStr, HttpRequestHandler handler) {
-        UNUSED(method);
-        UNUSED(regexpStr);
-        UNUSED(handler);
-    };
-  
     PgsqlServer(PgsqlServer const&) = delete;
     void operator=(PgsqlServer const&) = delete;
 };

@@ -194,9 +194,18 @@ void PgsqlWorker::sendSelectQueryResult(int num_of_columns, int num_of_rows){
 
     _socket.write((char*) ROW_DESCRIPTION_KEY, sizeof(ROW_DESCRIPTION_KEY));
 
-    unsigned char columns[]={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x04, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}; 
+    unsigned char columns[]={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}; 
 
-    writeSizeOfBlock(33);
+    const unsigned char end_of_columns_section[]={0x04, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}; 
+
+    writeSizeOfBlock(
+        sizeof(columns) +
+        _delim_len +
+        strlen(num_of_columns_value) +
+        strlen(anon_column) + 
+        _delim_len +
+        sizeof(end_of_columns_section)
+        );
 
     _socket.write((char*) _delimeter, _delim_len);
 
@@ -205,29 +214,10 @@ void PgsqlWorker::sendSelectQueryResult(int num_of_columns, int num_of_rows){
     _socket.write((char*) anon_column, strlen(anon_column));
 
     _socket.write((char*) columns, sizeof(columns));
-/*
-    std::vector<string[]> rows;
-    string ar[] = {"qwerty1"};
-    string ar1[] = {"qwerty2"};
-    string ar2[] = {"qwerty3"};
-    rows.push_back(ar);
-    rows.push_back(ar1);
-    rows.push_back(ar2);
-    for(std::vector<T>::iterator it = v.begin(); it != v.end(); ++it) {
-        _socket.write((char*) resulted_rows_delimiter, sizeof(resulted_rows_delimiter));
-        writeSizeOfBlock(13); //size of all values of row
-        _socket.write((char*) _delimeter, _delim_len);
-        _socket.write((char*) &it.size(), _delim_len); // number of row's values
-        for(int j=0; j < num_of_columns; j++){
 
-            writeSizeOfBlock(it[j].size()); //size of value
-            _socket.write((char*) it[j].c_str(), it[j].size()); // value
-        }
-    }
-*/
-    //Data row delimeter
-    
-    
+    _socket.write((char*) _delimeter, _delim_len);
+
+    _socket.write((char*) end_of_columns_section, sizeof(end_of_columns_section));
     
     _socket.write((char*) _delimeter, _delim_len);
 
@@ -238,8 +228,6 @@ void PgsqlWorker::sendSelectQueryResult(int num_of_columns, int num_of_rows){
     writeSizeOfBlock(3);
 
     _socket.write((char*) val, 3);
-
-
 
     /* Code message part */
     _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));

@@ -49,9 +49,32 @@ class TestBasic:
 
     def test_connection(self):
         try:
-            con = psycopg2.connect("dbname='postgres' user='nikitos' host='localhost' password='pass'")             
             self.log.debug("Running test_connection")
+            con = psycopg2.connect("dbname='postgres' user='nikitos' host='localhost' password='pass'")             
+            
+            self.log.debug("Running test_connection")
+            cur.execute("UPDATE Cars SET Name='Alfred Schmidt' WHERE Id=1121;")
+            cur.execute("DELETE FROM Cars where id = 1120")
 
         except psycopg2.DatabaseError, e:
-            assert False ('Error %s' % e)         
-            
+            assert False ('Error %s' % e)   
+
+    def insert_query_without_test(self):
+        self.log.debug("Running insert_query_without_test")
+        cur.execute("INSERT INTO kv VALUES ('aaa', 'ccc')")
+
+    def insert_query_with_columns_test(self):
+        self.log.debug("Running insert_query_with_columns_test")
+        cur.execute("INSERT INTO kv (k, v) VALUES ('aaa', 'ccc')")
+
+    def update_query_test(self):
+        self.log.debug("Running update_query_test")
+        cur.execute("UPDATE kv SET v = 'aaa' WHERE k = 'ccc'")
+
+    def select_by_key_query_test(self):
+        self.log.debug("Running update_query_test")
+        cur.execute("SELECT v FROM kv WHERE k = 'aaa'")
+
+    def delete_query_test(self):
+        self.log.debug("Running update_query_test")
+        cur.execute("DELETE FROM kv WHERE k = 'aaa'")

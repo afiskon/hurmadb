@@ -121,6 +121,7 @@ int main(int argc, char** argv) {
     httpServer.listen("127.0.0.1", httpPort);
 
     while(!terminate_flag.load()) {
+        //Unlike POSIX accept() procedure none of these .accept methods is blocking
         pgsqlServer.accept(terminate_flag);
         httpServer.accept(terminate_flag);
     }

@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <atomic>
 #include <defer.h>
+#include <deque>
 #include <iostream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -21,7 +22,6 @@
 #include <tuple>
 #include <unistd.h>
 #include <utility>
-#include <vector>
 #include <algorithm>
 #include <iterator>
 #include <regex>
@@ -93,19 +93,13 @@ void PgsqlWorker::sendParameter(const char* field, const char * parameter, const
 }
 
 void PgsqlWorker::sendServerConfiguration(){
+        const unsigned char successful_auth[] = {0x00, 0x00, 0x00, 0x00};
+
         _socket.write((char*) RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
 
-        //Space in start of configuration message
         writeSizeOfBlock(sizeof(uint32_t) + _delim_len * 4);
 
-        _socket.write((char*) _delimeter, _delim_len);
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        _socket.write((char*) _delimeter, _delim_len);
-        //End of space in start message
+        _socket.write((char*) successful_auth, sizeof(successful_auth));
 
         sendParameter("application_name", "", "S");
 
@@ -185,66 +179,74 @@ char* PgsqlWorker::readMessage(){
     return received_message;
 }
 
-void PgsqlWorker::sendSelectQueryResult(int num_of_columns, int num_of_rows){
-   // const char resulted_rows_delimiter[] = {'D'};
+void PgsqlWorker::sendSelectQueryResult(int16_t num_of_columns, int16_t num_of_rows, vector<DataColumn> columns, deque<vector<string>> rows){
     const char* select_command = "SELECT";
-    const char* num_of_rows_value = to_string(num_of_rows).c_str();
-    const char* num_of_columns_value = to_string(num_of_columns).c_str();     
-    const char* anon_column = "?column?";
+    const string num_of_rows_buf = to_string(num_of_rows);
+    const char* num_of_rows_string = num_of_rows_buf.c_str();
+    const int16_t l_num_of_columns = htons(num_of_columns);
+    int columns_len = 0;
 
-    _socket.write((char*) ROW_DESCRIPTION_KEY, sizeof(ROW_DESCRIPTION_KEY));
+    _socket.write((char*) &ROW_DESCRIPTION_KEY, sizeof(ROW_DESCRIPTION_KEY));
 
-    unsigned char columns[]={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17}; 
+    for(int i = 0; i<num_of_columns; i++){
+        columns_len += strlen(columns[i].column_name);
+        columns_len += sizeof(columns[i].spec_col_id);
+        columns_len += sizeof(columns[i].num_of_column);
+        columns_len += sizeof(columns[i].data_type_id);
+        columns_len += sizeof(columns[i].data_type_size);
+        columns_len += sizeof(columns[i].type_modifier);
+        columns_len += sizeof(columns[i].code_format);
+    }
 
-    const unsigned char end_of_columns_section[]={0x04, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00}; 
+    writeSizeOfBlock(sizeof(uint32_t) + sizeof(l_num_of_columns) + columns_len + _delim_len);
+    _socket.write((char*) &l_num_of_columns, sizeof(l_num_of_columns));
 
-    writeSizeOfBlock(
-        sizeof(columns) +
-        _delim_len +
-        strlen(num_of_columns_value) +
-        strlen(anon_column) + 
-        _delim_len +
-        sizeof(end_of_columns_section)
-        );
+    // In cycle, depends of number of columns(fields)
+    for(int i = 0; i<num_of_columns; i++){
+        DataColumn dc = columns[i];
+        _socket.write((char*) dc.column_name, strlen(dc.column_name));
+        _socket.write((char*) &dc.spec_col_id, sizeof(dc.spec_col_id));
+        _socket.write((char*) &dc.num_of_column, sizeof(dc.num_of_column));
+        _socket.write((char*) &dc.data_type_id, sizeof(dc.data_type_id));
+        _socket.write((char*) &dc.data_type_size, sizeof(dc.data_type_size));
+        _socket.write((char*) &dc.type_modifier, sizeof(dc.type_modifier));
+        _socket.write((char*) &dc.code_format, sizeof(dc.code_format));
+        _socket.write((char*) _delimeter, _delim_len);
+    }
+    //End of cycle
+    //Write data rows
+    while(rows.size()>0){
+        vector<string> cur_row = rows.front();
+        rows.pop_front();
+        
+        int size_of_values = 0;
+        for(int i=0; i<num_of_columns; i++){
+            size_of_values += cur_row[i].length() + sizeof(uint32_t);
+        }
+        _socket.write((char*) &RESULTED_ROWS_DELIMITER, sizeof(RESULTED_ROWS_DELIMITER));
+        writeSizeOfBlock(sizeof(uint32_t) + size_of_values + sizeof(l_num_of_columns));
+        _socket.write((char*) &l_num_of_columns, sizeof(l_num_of_columns));
 
-    _socket.write((char*) _delimeter, _delim_len);
-
-    _socket.write((char*) &num_of_columns_value, strlen(num_of_columns_value));
-
-    _socket.write((char*) anon_column, strlen(anon_column));
-
-    _socket.write((char*) columns, sizeof(columns));
-
-    _socket.write((char*) _delimeter, _delim_len);
-
-    _socket.write((char*) end_of_columns_section, sizeof(end_of_columns_section));
+        for(int i=0; i<num_of_columns; i++){
+            writeSizeOfBlock(cur_row[i].length());
+            _socket.write((char*) cur_row[i].c_str(), cur_row[i].length());
+        }
+        
+    }
     
-    _socket.write((char*) _delimeter, _delim_len);
-
-    _socket.write((char*) &num_of_rows_value, strlen(num_of_rows_value));
-    
-    const char* val = "151";
-
-    writeSizeOfBlock(3);
-
-    _socket.write((char*) val, 3);
-
     /* Code message part */
     _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));
-    writeSizeOfBlock(
-            sizeof(uint32_t) +
+    writeSizeOfBlock(sizeof(uint32_t) +
             strlen(select_command) + 
             _delim_len + 
-            strlen(num_of_rows_value) + 
+            strlen(num_of_rows_string) + 
             strlen(READY_FOR_QUERY_KEY)
         );
     _socket.write(select_command, strlen(select_command));
     _socket.write((char*) &_range_delim, _delim_len);
-    _socket.write(num_of_rows_value, strlen(num_of_rows_value));
+    _socket.write(num_of_rows_string, strlen(num_of_rows_string));
     _socket.write((char*) _delimeter, _delim_len);
-    _socket.write((char*) READY_FOR_QUERY_KEY, strlen(READY_FOR_QUERY_KEY));
-     writeSizeOfBlock(sizeof(uint32_t) + strlen(TRANZACTION_BLOCK_KEY));
-    _socket.write((char*) TRANZACTION_BLOCK_KEY, strlen(TRANZACTION_BLOCK_KEY));   
+    writeReadyForQueryMessage(TRANZACTION_BLOCK_KEY, sizeof(TRANZACTION_BLOCK_KEY));   
 }
 
 /*
@@ -273,9 +275,7 @@ void PgsqlWorker::sendInsertQueryResult(int from, int num_of_insertions){
     _socket.write((char*) &_range_delim, _delim_len);
     _socket.write(num_of_val, strlen(num_of_val));
     _socket.write((char*) _delimeter, _delim_len);
-    _socket.write((char*) READY_FOR_QUERY_KEY, strlen(READY_FOR_QUERY_KEY));
-     writeSizeOfBlock(sizeof(uint32_t) + sizeof(TRANZACTION_BLOCK_KEY));
-    _socket.write((char*) TRANZACTION_BLOCK_KEY, strlen(TRANZACTION_BLOCK_KEY));   
+    writeReadyForQueryMessage(TRANZACTION_BLOCK_KEY, sizeof(TRANZACTION_BLOCK_KEY));   
 }
 
 /*
@@ -299,9 +299,7 @@ void PgsqlWorker::sendDeleteQueryResult(int num_of_rows){
     _socket.write((char*) &_range_delim, _delim_len);
     _socket.write(num_of_rows_value, strlen(num_of_rows_value));
     _socket.write((char*) _delimeter, _delim_len);
-    _socket.write((char*) READY_FOR_QUERY_KEY, strlen(READY_FOR_QUERY_KEY));
-     writeSizeOfBlock(sizeof(uint32_t) + strlen(TRANZACTION_BLOCK_KEY));
-    _socket.write((char*) TRANZACTION_BLOCK_KEY, strlen(TRANZACTION_BLOCK_KEY));   
+    writeReadyForQueryMessage(TRANZACTION_BLOCK_KEY, sizeof(TRANZACTION_BLOCK_KEY));  
 }
 
 /*
@@ -325,11 +323,27 @@ void PgsqlWorker::sendUpdateQueryResult(int num_of_rows){
     _socket.write((char*) &_range_delim, _delim_len);
     _socket.write(num_of_rows_value, strlen(num_of_rows_value));
     _socket.write((char*) _delimeter, _delim_len);
-    _socket.write((char*) READY_FOR_QUERY_KEY, strlen(READY_FOR_QUERY_KEY));
-     writeSizeOfBlock(sizeof(uint32_t) + strlen(TRANZACTION_BLOCK_KEY));
-    _socket.write((char*) TRANZACTION_BLOCK_KEY, strlen(TRANZACTION_BLOCK_KEY));   
+    writeReadyForQueryMessage(TRANZACTION_BLOCK_KEY, sizeof(TRANZACTION_BLOCK_KEY)); 
 }
 
+/*
+Send to client next message: 
+    C...UPDATE.num_of_rows.Z...T
+where num_of_rows is the number of updated rows
+*/
+void PgsqlWorker::sendErrorMessage(){
+    const char* error_type_name = "ERROR";
+    const char* fatal_type_name = "FATAL";
+    const char* panic_type_name = "PANIC";
+    _socket.write((char*)&ERROR_RESPONSE_KEY, sizeof(ERROR_RESPONSE_KEY));
+}
+
+
+void PgsqlWorker::writeReadyForQueryMessage(const char key, int key_size){
+    _socket.write((char*) READY_FOR_QUERY_KEY, strlen(READY_FOR_QUERY_KEY));
+    writeSizeOfBlock(sizeof(uint32_t) + key_size);
+    _socket.write(&key, key_size);  
+}
 
 void PgsqlWorker::writeSizeOfBlock(size_t size){
     uint32_t message_size = htonl(size);
@@ -389,8 +403,19 @@ void PgsqlWorker::run() {
             else if(0==strcmp(received_message, "COMMIT"))
                 writeCodeAnswer("COMMIT",READY_FOR_QUERY_KEY, EMPTY_QUERY_RESPONSE_KEY);
        
-            else if(regex_match(received_message,cm,select_query_pattern))
-                sendSelectQueryResult(1, 1);
+            else if(regex_match(received_message,cm,select_query_pattern)){
+                vector<DataColumn> columns;
+                const char* c_name = "col1";
+                DataColumn dc(c_name);
+                columns.push_back(dc);
+                
+                deque<vector<string>> rows;
+                vector<string> row;
+                row.push_back("151");
+                row.push_back("value");
+                rows.push_front(row);
+                sendSelectQueryResult(1, 1, columns, rows);
+            }
 
             else if(regex_match(received_message,cm,insert_query_pattern))
                 sendInsertQueryResult(0, 1);

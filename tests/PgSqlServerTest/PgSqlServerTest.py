@@ -16,13 +16,14 @@ START = os.environ.get('HURMADB_PORT') is None
 PORT = int(os.getenv('HURMADB_PORT', 5432))
 con = None
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+FLAG = '-p' #special flag for pgsql server port
 
 def hurmadb_start(port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['../../hurmadb', str(port)])
+        return subprocess.Popen(['../../hurmadb',FLAG, str(port)])
     else:
         return None
 
@@ -45,6 +46,7 @@ class TestBasic:
 
     def teardown_class(self):
         hurmadb_stop(self.pobj)
+        time.sleep(2) #time for HurmaDB to stop server
         self.log.debug("HurmaDB stopped")
 
     def test_connection(self):

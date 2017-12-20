@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <DataColumn.h>
+#include <deque>
 #include <TcpServer.h>
 #include <HttpRequestHandler.h>
 #include <Socket.h>
@@ -9,6 +11,9 @@
 #include <pcre.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
+
+using namespace std;
 
 #define UNUSED(x) (void)(x)
 
@@ -39,9 +44,12 @@ private:
 
     const char* READY_FOR_QUERY_KEY = "Z";   
 
-    const char TRANZACTION_BLOCK_KEY[1] = {'T'}; 
+    //Transaction status' keys for ReadyForQuery message
+    const char TRANZACTION_BLOCK_KEY = 'T'; 
+    const char FAILED_TRANSACTION_BLOCK_KEY = 'E';
+    const char NOT_IN_TRANSACTION_BLOCK_KEY = 'I';
 
-
+    const char RESULTED_ROWS_DELIMITER = 'D';
 
     const char* EMPTY_QUERY_RESPONSE_KEY = "I";
 
@@ -49,7 +57,7 @@ private:
 
     const char NOTICE_RESPONSE_KEY = 'N';
 
-    const char ROW_DESCRIPTION_KEY[1] = {'T'}; 
+    const char ROW_DESCRIPTION_KEY = 'T'; 
 
     enum _AUTH_REQ {
         AUTH_REQ_OK = 0x30,   /* User is authenticated  */
@@ -68,10 +76,8 @@ private:
 
     const char RESPONSE_MESSAGE_KEY [1]= {'R'};  
 
-
-
     void writeCodeAnswer(const char* command, const char * status, const char * response_type);
-    void sendSelectQueryResult(int num_of_columns, int num_of_rows);
+    void sendSelectQueryResult(const int16_t num_of_columns, int16_t num_of_rows, vector<DataColumn> columns, deque<vector<string>> rows);
     void sendInsertQueryResult(int from, int num_of_insertions);
     void sendDeleteQueryResult(int num_of_rows);
     void sendUpdateQueryResult(int num_of_rows);
@@ -80,6 +86,8 @@ private:
     char* readMessage();
     void sendParameter(const char* field, const char * parameter, const char* type);
     void writeSizeOfBlock(size_t szie);
+    void writeReadyForQueryMessage(const char key, int key_size);
+    void sendErrorMessage();
 };
 
 class PgsqlServer : public TcpServer {

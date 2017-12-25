@@ -79,6 +79,26 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
     return sb.GetString();
 }
 
+// TODO: impelemt more efficient interation for wide ranges
+deque<vector<string>> PersistentStorage::getRangeForPgsql(const std::string& key_from, const std::string& key_to) {
+    Iterator* it = _db->NewIterator(ReadOptions());
+    defer(delete it);
+    deque<vector<string>> rows;
+                
+    for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {
+        vector<string> row;
+        row.push_back(it->key().ToString());
+        row.push_back(it->value().ToString());
+        rows.push_front(row);
+    }
+
+    // Check for any errors found during the scan
+    if(!it->status().ok())
+        throw std::runtime_error("PersistentStore::getRange() - error during the scan");
+
+    return rows;
+}
+
 void PersistentStorage::del(const std::string& key, bool* found) {
     std::string value = "";
     Status s = _db->Get(ReadOptions(), key, &value);

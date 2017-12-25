@@ -250,7 +250,7 @@ void* HttpServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int
     auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
     if(arg == nullptr) {
         close(accepted_socket);
-        throw std::runtime_error("HttpServer::createWTPArg() - malloc() call failed");
+        throw std::runtime_error("HttpServer::createWorkerThreadProcArg() - malloc() call failed");
     }
     arg->socket = accepted_socket;
     arg->handlers = _handlers;

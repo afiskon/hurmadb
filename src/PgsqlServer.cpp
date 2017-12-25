@@ -332,9 +332,6 @@ Send to client next message:
 where num_of_rows is the number of updated rows
 */
 void PgsqlWorker::sendErrorMessage(){
-    const char* error_type_name = "ERROR";
-    const char* fatal_type_name = "FATAL";
-    const char* panic_type_name = "PANIC";
     _socket.write((char*)&ERROR_RESPONSE_KEY, sizeof(ERROR_RESPONSE_KEY));
 }
 
@@ -418,7 +415,7 @@ void PgsqlWorker::run() {
             }
 
             else if(regex_match(received_message,cm,insert_query_pattern))
-                sendInsertQueryResult(0, 1);
+                sendInsertQueryResult(1, 1);
 
             else if(regex_match(received_message,cm,delete_query_pattern))
                 sendDeleteQueryResult(1);

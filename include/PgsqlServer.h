@@ -57,7 +57,11 @@ private:
 
     const char NOTICE_RESPONSE_KEY = 'N';
 
-    const char ROW_DESCRIPTION_KEY = 'T'; 
+    const char ROW_DESCRIPTION_KEY = 'T';
+
+    const char* error_type_name = "ERROR";
+    const char* fatal_type_name = "FATAL";
+    const char* panic_type_name = "PANIC";
 
     enum _AUTH_REQ {
         AUTH_REQ_OK = 0x30,   /* User is authenticated  */

@@ -13,8 +13,9 @@ import sys
 import psycopg2
 
 START = os.environ.get('HURMADB_PORT') is None
-PORT = int(os.getenv('HURMADB_PORT', 5432))
+PORT = int(os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000)))
 con = None
+cur = None
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 FLAG = '-p' #special flag for pgsql server port
 
@@ -52,31 +53,36 @@ class TestBasic:
     def test_connection(self):
         try:
             self.log.debug("Running test_connection")
-            con = psycopg2.connect("dbname='postgres' user='nikitos' host='localhost' password='pass'")             
-            
+            con = psycopg2.connect("dbname='postgres' user='nikitos' host='localhost' password='pass'")
+            cur = con.cursor()
             self.log.debug("Running test_connection")
             cur.execute("UPDATE Cars SET Name='Alfred Schmidt' WHERE Id=1121;")
             cur.execute("DELETE FROM Cars where id = 1120")
 
-        except psycopg2.DatabaseError, e:
-            assert False ('Error %s' % e)   
+        except(psycopg2.DatabaseError, e):
+            assert (False ('Error %s' % e))
 
-    def insert_query_without_test(self):
+    def insert_query_without_columns_test(self):
         self.log.debug("Running insert_query_without_test")
         cur.execute("INSERT INTO kv VALUES ('aaa', 'ccc')")
+        assert(1==cur.rowcount)
 
     def insert_query_with_columns_test(self):
         self.log.debug("Running insert_query_with_columns_test")
         cur.execute("INSERT INTO kv (k, v) VALUES ('aaa', 'ccc')")
+        assert(1==cur.rowcount)
 
     def update_query_test(self):
         self.log.debug("Running update_query_test")
         cur.execute("UPDATE kv SET v = 'aaa' WHERE k = 'ccc'")
+        assert(1==cur.rowcount)
 
     def select_by_key_query_test(self):
         self.log.debug("Running update_query_test")
         cur.execute("SELECT v FROM kv WHERE k = 'aaa'")
+        assert(1==cur.rowcount)
 
     def delete_query_test(self):
         self.log.debug("Running update_query_test")
         cur.execute("DELETE FROM kv WHERE k = 'aaa'")
+        assert(1==cur.rowcount)

@@ -14,13 +14,14 @@ import sys
 START = os.environ.get('HURMADB_PORT') is None
 PORT = int(os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000)))
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+FLAG = '-h' #special flag for http server port
 
 def hurmadb_start(port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['../../hurmadb', str(port)])
+        return subprocess.Popen(['../../hurmadb',FLAG, str(port)])
     else:
         return None
 

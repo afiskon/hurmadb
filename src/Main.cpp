@@ -107,8 +107,7 @@ int main(int argc, char** argv) {
     }
 
     HttpServer httpServer;
-
-    PgsqlServer pgsqlServer(&terminate_flag);
+    PgsqlServer pgsqlServer;
 
     httpServer.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
     httpServer.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);

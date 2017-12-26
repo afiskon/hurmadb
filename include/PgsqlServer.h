@@ -96,7 +96,7 @@ private:
 
 class PgsqlServer : public TcpServer {
 public:
-    PgsqlServer(std::atomic_bool* terminate_flag);
+    PgsqlServer();
     ~PgsqlServer();
     virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter);
     PgsqlServer(PgsqlServer const&) = delete;

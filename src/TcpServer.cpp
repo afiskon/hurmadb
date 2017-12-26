@@ -75,9 +75,6 @@ void TcpServer::listen(const char* host, int port) {
 
 /* One iteration of accept loop */
 void TcpServer::accept(const std::atomic_bool& terminate_flag) {
-
-
-
     struct timeval tv; /* we have to re-initialize these structures every time */
     tv.tv_sec = 1L;
     tv.tv_usec = 0;

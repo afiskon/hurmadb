@@ -33,12 +33,6 @@ using namespace std;
  * PgsqlWorker
  **********************************************************************
  */
-
-#define MAX_BODY_SIZE 1024 * 1024 /* 1 Mb should probably be enough */
-
-int sock;
-std::atomic_bool* terminate_flag_local;
-
 struct PgsqlWorkerThreadProcArg {
     int socket;
     std::atomic_int* workersCounter;
@@ -429,7 +423,6 @@ void PgsqlWorker::run() {
 
         //Close server message
         if(key=='X'){
-            terminate_flag_local->store(true);
             getMessageSize();
             break;
         }
@@ -444,15 +437,13 @@ void PgsqlWorker::run() {
  **********************************************************************
  */
 
-PgsqlServer::PgsqlServer(std::atomic_bool* terminate_flag): TcpServer(&PgsqlWorkerThreadProc) {
-    terminate_flag_local = terminate_flag;
+PgsqlServer::PgsqlServer(): TcpServer(&PgsqlWorkerThreadProc) {
 }
 
 PgsqlServer::~PgsqlServer(){
 }
 
 void* PgsqlServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter){
-    sock = accepted_socket;
 
     auto arg = new(std::nothrow) PgsqlWorkerThreadProcArg();
 

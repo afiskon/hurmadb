@@ -87,64 +87,73 @@ void PgsqlWorker::sendParameter(const char* field, const char * parameter, const
 }
 
 void PgsqlWorker::sendServerConfiguration(){
-        const unsigned char successful_auth[] = {0x00, 0x00, 0x00, 0x00};
+    const unsigned char successful_auth[] = {0x00, 0x00, 0x00, 0x00};
+    uint32_t processID = 88;
+    uint32_t secretKey = 88;
 
-        _socket.write((char*) RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
+    _socket.write((char*) RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
 
-        writeSizeOfBlock(sizeof(uint32_t) + _delim_len * 4);
+    writeSizeOfBlock(sizeof(uint32_t) + _delim_len * 4);
 
-        _socket.write((char*) successful_auth, sizeof(successful_auth));
+    _socket.write((char*) successful_auth, sizeof(successful_auth));
 
-        sendParameter("application_name", "", "S");
+    sendParameter("application_name", "", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("client_encoding", "UTF8", "S");
+    sendParameter("client_encoding", "UTF8", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("DateStyle", "ISO, MDY", "S");
+    sendParameter("DateStyle", "ISO, MDY", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("integer_datetimes", "on", "S");
+    sendParameter("integer_datetimes", "on", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("IntervalStyle", "postgres", "S");
+    sendParameter("IntervalStyle", "postgres", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("is_superuser", "on", "S");
+    sendParameter("is_superuser", "on", "S");
 
-        _socket.write((char*) _delimeter, _delim_len);
+    _socket.write((char*) _delimeter, _delim_len);
 
-        sendParameter("server_encoding", "UTF8", "S");
-        
-        _socket.write((char*) _delimeter, _delim_len);
-
-        sendParameter("server_version", "9.6.5", "S");
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        sendParameter("session_authorization", "postgres", "S");
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        sendParameter("standard_conforming_strings", "on", "S");
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        sendParameter("TimeZone", "W-SU", "S");
-
-        _socket.write((char*) _delimeter, _delim_len);
-
-        _socket.write((char*) "K");
-        
-        //Not meaning end of configuration message
-        unsigned char end[] = { 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x49, 0x4A, 0x01, 0x08, 0x39, 0xFF, 0x5A, 0x00, 0x00, 0x00, 0x05, 0x49};
+    sendParameter("server_encoding", "UTF8", "S");
     
-        _socket.write((char*) end, sizeof(end));
+    _socket.write((char*) _delimeter, _delim_len);
+
+    sendParameter("server_version", "9.6.5", "S");
+
+    _socket.write((char*) _delimeter, _delim_len);
+
+    sendParameter("session_authorization", "postgres", "S");
+
+    _socket.write((char*) _delimeter, _delim_len);
+
+    sendParameter("standard_conforming_strings", "on", "S");
+
+    _socket.write((char*) _delimeter, _delim_len);
+
+    sendParameter("TimeZone", "W-SU", "S");
+
+    _socket.write((char*) _delimeter, _delim_len);
+
+    writeKeyData(processID, secretKey);
+
+    writeReadyForQueryMessage(NOT_IN_TRANSACTION_BLOCK_KEY, sizeof(NOT_IN_TRANSACTION_BLOCK_KEY));
+}
+
+void PgsqlWorker::writeKeyData(uint32_t processID, uint32_t secretKey){
+    uint32_t pID = htonl(processID);
+    uint32_t sKey = htonl(secretKey);
+
+    _socket.write((char*) &CANCELATION_KEY_DATA_KEY, sizeof(CANCELATION_KEY_DATA_KEY));
+    writeSizeOfBlock(sizeof(uint32_t) + sizeof(pID) + sizeof(sKey));
+    _socket.write((char*) &pID, sizeof(pID));
+    _socket.write((char*) &sKey, sizeof(sKey));
 }
 
 void PgsqlWorker::writeCodeAnswer(const char* command, const char* status, const char * response_type){
@@ -422,7 +431,7 @@ void PgsqlWorker::run() {
         }
 
         //Close server message
-        if(key=='X'){
+        else if(key=='X'){
             getMessageSize();
             break;
         }

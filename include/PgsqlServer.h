@@ -57,7 +57,7 @@ private:
 
     const char NOTICE_RESPONSE_KEY = 'N';
 
-    const char CANCELATION_KEY_DATA_KEY = 'N';
+    const char CANCELATION_KEY_DATA_KEY = 'K';
 
     const char ROW_DESCRIPTION_KEY = 'T';
 
@@ -95,6 +95,8 @@ private:
     void writeReadyForQueryMessage(const char key, int key_size);
     void sendErrorMessage();
     void writeKeyData(uint32_t processID, uint32_t secretKey);
+    void getStartupMessage();
+
 };
 
 class PgsqlServer : public TcpServer {

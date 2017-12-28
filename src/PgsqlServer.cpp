@@ -8,6 +8,7 @@
 #include <atomic>
 #include <defer.h>
 #include <deque>
+#include <inttypes.h>
 #include <iostream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -350,6 +351,17 @@ void PgsqlWorker::writeSizeOfBlock(size_t size){
     _socket.write((char*) &message_size, sizeof(message_size));
 }
 
+void PgsqlWorker::getStartupMessage(){
+    uint32_t message_size;
+    uint32_t protocol_version_number;
+    char* parameters;
+    //char* username;
+    message_size = (uint32_t)getMessageSize() - sizeof(protocol_version_number);
+    protocol_version_number = (uint32_t)getMessageSize();
+    parameters = new char[message_size];
+    _socket.read(parameters, message_size);
+}
+
 void PgsqlWorker::run() {
     const regex select_query_pattern("^SELECT.*");
     const regex insert_query_pattern("^INSERT.*");
@@ -363,10 +375,12 @@ void PgsqlWorker::run() {
     char* received_message;
 
     received_message = readMessage();
+
+    printf("%s\n", received_message);
             
     _socket.write((char*) &NOTICE_RESPONSE_KEY, sizeof(NOTICE_RESPONSE_KEY));
 
-    received_message = readMessage();
+    getStartupMessage();
 
     _socket.write(RESPONSE_MESSAGE_KEY,sizeof(RESPONSE_MESSAGE_KEY));
 
@@ -383,15 +397,30 @@ void PgsqlWorker::run() {
     _socket.write((char*) pass_delimiter, sizeof(pass_delimiter));
     _socket.write((char*) pass_type, sizeof(pass_type));
     _socket.write((char*) noise, sizeof(noise));
-    _socket.read(&key, sizeof(key));
-
-    getMessageSize();
     
     sendServerConfiguration();
 
+    while(true){
+        try{
+            _socket.read(&key, sizeof(key));
+            if(key=='p'){
+                received_message = readMessage();
+                printf("%s\n", received_message);
+                break;
+            }
+            else
+                throw std::runtime_error("PgsqlServer::run() - wrong sequnce of messages. Password message should be next.");
+        }
+        catch(const std::exception& e){ }
+    }
 
     while(true){
-        _socket.read(&key, sizeof(key));
+        try{
+            _socket.read(&key, sizeof(key));
+        }
+        catch(const std::exception& e){
+            continue;
+        }
 
         //The key of query
         if(key=='Q'){

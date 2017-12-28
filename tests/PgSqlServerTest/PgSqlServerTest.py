@@ -14,6 +14,7 @@ import psycopg2
 
 START = os.environ.get('HURMADB_PORT') is None
 PORT = int(os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000)))
+HTTPSERVER_PORT = 8080 #default port of http server
 con = None
 cur = None
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -41,7 +42,7 @@ def hurmadb_stop(pobj):
     """
     Close all servers
     """
-    requests.put('http://localhost:{}/v1/_stop'.format(PORT))
+    requests.put('http://localhost:{}/v1/_stop'.format(HTTPSERVER_PORT))
 
     if START:
         pobj.wait()
@@ -67,8 +68,8 @@ class TestBasic:
             cur.execute("UPDATE Cars SET Name='Alfred Schmidt' WHERE Id=1121;")
             cur.execute("DELETE FROM Cars where id = 1120")
 
-        except(psycopg2.DatabaseError, e):
-            assert (False ('Error %s' % e))
+        except psycopg2.DatabaseError as e:
+            assert (False, ('Error %s' % e))
 
     def insert_query_without_columns_test(self):
         self.log.debug("Running insert_query_without_test")

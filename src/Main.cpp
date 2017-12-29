@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
     int c;
     int httpPort = 8080;
-    int pgsqlPort = 5432;
+    int pgsqlPort = 5332;
 
     while ((c = getopt (argc, argv, "p:h:")) != -1)
     switch (c) {

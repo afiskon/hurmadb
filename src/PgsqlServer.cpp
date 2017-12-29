@@ -337,6 +337,9 @@ where num_of_rows is the number of updated rows
 */
 void PgsqlWorker::sendErrorMessage(){
     _socket.write((char*)&ERROR_RESPONSE_KEY, sizeof(ERROR_RESPONSE_KEY));
+    char* sseverity = "SERROR";
+    char* vseverity = "VERROR";
+    char* error_code = "0A000";
 }
 
 
@@ -372,16 +375,16 @@ uint32_t PgsqlWorker::getSSLRequest(){
         m_size = (uint32_t)getMessageSize();
         if(m_size == 8)
             return (uint32_t)getMessageSize();
-        else
-            
     }
     catch (const std::exception& e){ 
         return 0;
     }
+    return 0;
 }
 
 void PgsqlWorker::run() {
     const regex select_query_pattern("^SELECT v FROM kv WHERE k = \'(.*)\';");
+    const regex select_number_query_pattern("^SELECT ([-]?[0-9]*\\.[0-9]+|[-]?[0-9]+);");
     const regex select_range_query_pattern("^SELECT k, v FROM kv WHERE k >= \'(.*)\' AND k <= \'(.*)\';");
     const regex insert_query_pattern("^INSERT INTO kv VALUES \\(\'(.*)\', \'(.*)\'\\);");
     const regex update_query_pattern("^UPDATE kv SET v = \'(.*)\' WHERE k = \'(.*)\';");
@@ -479,6 +482,18 @@ void PgsqlWorker::run() {
                 rows.push_front(row);
                 rows.push_front(row2);
                 sendSelectQueryResult(1, 2, columns, rows);
+            }
+
+            else if(regex_match(received_message,cm,select_number_query_pattern)){
+                vector<DataColumn> columns;
+                const char* c_name = "?column?";
+                DataColumn dc(c_name);
+                columns.push_back(dc);     
+                deque<vector<string>> rows;
+                vector<string> row;
+                row.push_back(cm.str(1));
+                rows.push_front(row);
+                sendSelectQueryResult(1, 1, columns, rows);
             }
 
             else if(regex_match(received_message,cm,insert_query_pattern)){

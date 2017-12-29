@@ -337,9 +337,11 @@ where num_of_rows is the number of updated rows
 */
 void PgsqlWorker::sendErrorMessage(){
     _socket.write((char*)&ERROR_RESPONSE_KEY, sizeof(ERROR_RESPONSE_KEY));
-    char* sseverity = "SERROR";
-    char* vseverity = "VERROR";
-    char* error_code = "0A000";
+    /*
+    const char* sseverity = "SERROR";
+    const char* vseverity = "VERROR";
+    const char* error_code = "0A000";
+    */
 }
 
 

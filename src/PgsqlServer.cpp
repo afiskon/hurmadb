@@ -356,27 +356,45 @@ void PgsqlWorker::getStartupMessage(){
     uint32_t protocol_version_number;
     char* parameters;
     //char* username;
-    message_size = (uint32_t)getMessageSize() - sizeof(protocol_version_number);
-    protocol_version_number = (uint32_t)getMessageSize();
-    parameters = new char[message_size];
-    _socket.read(parameters, message_size);
+    try{
+        message_size = (uint32_t)getMessageSize() - sizeof(protocol_version_number);
+        protocol_version_number = (uint32_t)getMessageSize();
+        parameters = new char[message_size];
+        _socket.read(parameters, message_size);
+    }
+    catch(const std::exception& e){ }
+}
+
+//Returned the  ssl code, depends on protocol version
+uint32_t PgsqlWorker::getSSLRequest(){
+    uint32_t m_size;
+    try{
+        m_size = (uint32_t)getMessageSize();
+        if(m_size == 8)
+            return (uint32_t)getMessageSize();
+        else
+            
+    }
+    catch (const std::exception& e){ 
+        return 0;
+    }
 }
 
 void PgsqlWorker::run() {
-    const regex select_query_pattern("^SELECT.*");
-    const regex insert_query_pattern("^INSERT.*");
-    const regex update_query_pattern("^UPDATE.*");
-    const regex delete_query_pattern("^DELETE.*");
+    const regex select_query_pattern("^SELECT v FROM kv WHERE k = \'(.*)\';");
+    const regex select_range_query_pattern("^SELECT k, v FROM kv WHERE k >= \'(.*)\' AND k <= \'(.*)\';");
+    const regex insert_query_pattern("^INSERT INTO kv VALUES \\(\'(.*)\', \'(.*)\'\\);");
+    const regex update_query_pattern("^UPDATE kv SET v = \'(.*)\' WHERE k = \'(.*)\';");
+    const regex delete_query_pattern("^DELETE FROM kv WHERE k = \'(.*)\';");
     const unsigned char pass_delimiter[1]={0xDE};
     const unsigned char pass_type[1]={_AUTH_REQ(AUTH_REQ_MD5)};
     const unsigned char noise[2]={0xF9, 0xF9};
+
     cmatch cm;
     char key;
     char* received_message;
 
-    received_message = readMessage();
-
-    printf("%s\n", received_message);
+    getSSLRequest();
             
     _socket.write((char*) &NOTICE_RESPONSE_KEY, sizeof(NOTICE_RESPONSE_KEY));
 
@@ -398,21 +416,19 @@ void PgsqlWorker::run() {
     _socket.write((char*) pass_type, sizeof(pass_type));
     _socket.write((char*) noise, sizeof(noise));
     
-    sendServerConfiguration();
-
-    while(true){
+    while(true)
         try{
             _socket.read(&key, sizeof(key));
             if(key=='p'){
                 received_message = readMessage();
-                printf("%s\n", received_message);
                 break;
             }
             else
                 throw std::runtime_error("PgsqlServer::run() - wrong sequnce of messages. Password message should be next.");
         }
         catch(const std::exception& e){ }
-    }
+
+    sendServerConfiguration();
 
     while(true){
         try{
@@ -433,6 +449,7 @@ void PgsqlWorker::run() {
                 writeCodeAnswer("COMMIT",READY_FOR_QUERY_KEY, EMPTY_QUERY_RESPONSE_KEY);
        
             else if(regex_match(received_message,cm,select_query_pattern)){
+                printf("%s\n", cm.str(1).c_str());
                 vector<DataColumn> columns;
                 const char* c_name = "col1";
                 DataColumn dc(c_name);
@@ -446,14 +463,40 @@ void PgsqlWorker::run() {
                 sendSelectQueryResult(1, 1, columns, rows);
             }
 
-            else if(regex_match(received_message,cm,insert_query_pattern))
-                sendInsertQueryResult(1, 1);
+            else if(regex_match(received_message,cm,select_range_query_pattern)){
+                printf("%s\n", cm.str(1).c_str());
+                printf("%s\n", cm.str(2).c_str());
+                vector<DataColumn> columns;
+                const char* c_name = "col1";
+                DataColumn dc(c_name);
+                columns.push_back(dc);
+                
+                deque<vector<string>> rows;
+                vector<string> row;
+                vector<string> row2;
+                row.push_back(cm.str(1));
+                row2.push_back(cm.str(2));
+                rows.push_front(row);
+                rows.push_front(row2);
+                sendSelectQueryResult(1, 2, columns, rows);
+            }
 
-            else if(regex_match(received_message,cm,delete_query_pattern))
+            else if(regex_match(received_message,cm,insert_query_pattern)){
+                printf("%s\n", cm.str(1).c_str());
+                printf("%s\n", cm.str(2).c_str());
+                sendInsertQueryResult(1, 1);
+            }
+
+            else if(regex_match(received_message,cm,delete_query_pattern)){
+                printf("%s\n", cm.str(1).c_str());
                 sendDeleteQueryResult(1);
+            }
 
             else if(regex_match(received_message,cm,update_query_pattern))
                 sendUpdateQueryResult(1);
+
+            else
+                throw std::runtime_error("PgsqlServer::run() - wrong query. This syntax is not supported.");               
 
             printf("%s\n", received_message);
             defer(delete received_message);
@@ -464,6 +507,8 @@ void PgsqlWorker::run() {
             getMessageSize();
             break;
         }
+        
+
     }
 
    

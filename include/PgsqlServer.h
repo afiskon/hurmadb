@@ -96,6 +96,7 @@ private:
     void sendErrorMessage();
     void writeKeyData(uint32_t processID, uint32_t secretKey);
     void getStartupMessage();
+    uint32_t getSSLRequest();
 
 };
 

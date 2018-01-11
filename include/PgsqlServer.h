@@ -78,9 +78,9 @@ private:
         AUTH_REQ_SSPI = 0x39   /* SSPI negotiate without wrap() */
     };
 
-    const char COMMAND_KEY [1]= {'C'}; 
+    const char COMMAND_KEY = 'C'; 
 
-    const char RESPONSE_MESSAGE_KEY [1]= {'R'};  
+    const char RESPONSE_MESSAGE_KEY = 'R';  
 
     void writeCodeAnswer(const char* command, const char * status, const char * response_type);
     void sendSelectQueryResult(const int16_t num_of_columns, int16_t num_of_rows, vector<DataColumn> columns, deque<vector<string>> rows);
@@ -95,8 +95,10 @@ private:
     void writeReadyForQueryMessage(const char key, int key_size);
     void sendErrorMessage();
     void writeKeyData(uint32_t processID, uint32_t secretKey);
-    void getStartupMessage();
-    uint32_t getSSLRequest();
+    void getStartupMessage(bool* status);
+    uint32_t getSSLRequest(bool* status);
+    char* getPassword(bool* status);
+    void sendPasswordType();
 
 };
 

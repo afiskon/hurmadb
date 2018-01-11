@@ -92,7 +92,7 @@ void PgsqlWorker::sendServerConfiguration(){
     uint32_t processID = 88;
     uint32_t secretKey = 88;
 
-    _socket.write((char*) RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
+    _socket.write((char*) &RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
 
     writeSizeOfBlock(sizeof(uint32_t) + _delim_len * 4);
 
@@ -160,7 +160,7 @@ void PgsqlWorker::writeKeyData(uint32_t processID, uint32_t secretKey){
 void PgsqlWorker::writeCodeAnswer(const char* command, const char* status, const char * response_type){
     uint32_t message_size = htonl(sizeof(uint32_t) + strlen(command) + strlen(status));
     
-    _socket.write(COMMAND_KEY, sizeof(COMMAND_KEY)); //Code key
+    _socket.write((char*) &COMMAND_KEY, sizeof(COMMAND_KEY)); //Code key
     _socket.write((char*) &message_size, sizeof(message_size));
     _socket.write(command, strlen(command));
     _socket.write((char*) _delimeter, _delim_len);
@@ -239,7 +239,7 @@ void PgsqlWorker::sendSelectQueryResult(int16_t num_of_columns, int16_t num_of_r
     }
     
     /* Code message part */
-    _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));
+    _socket.write((char*) &COMMAND_KEY, sizeof(COMMAND_KEY));
     writeSizeOfBlock(sizeof(uint32_t) +
             strlen(select_command) + 
             _delim_len + 
@@ -263,7 +263,7 @@ void PgsqlWorker::sendInsertQueryResult(int from, int num_of_insertions){
     const char* from_value = to_string(from).c_str();
     const char* num_of_val = to_string(num_of_insertions).c_str();
 
-    _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));
+    _socket.write((char*) &COMMAND_KEY, sizeof(COMMAND_KEY));
     writeSizeOfBlock(
             sizeof(uint32_t) +
             strlen(insert_command) + 
@@ -291,7 +291,7 @@ void PgsqlWorker::sendDeleteQueryResult(int num_of_rows){
     const char* delete_command = "DELETE";
     const char* num_of_rows_value = to_string(num_of_rows).c_str();
 
-    _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));
+    _socket.write((char*) &COMMAND_KEY, sizeof(COMMAND_KEY));
     writeSizeOfBlock(
             sizeof(uint32_t) +
             strlen(delete_command) + 
@@ -308,14 +308,14 @@ void PgsqlWorker::sendDeleteQueryResult(int num_of_rows){
 
 /*
 Send to client next message: 
-    C...UPDATE.num_of_rows.Z...T
+    C...DELETE.num_of_rows.Z...T
 where num_of_rows is the number of updated rows
 */
 void PgsqlWorker::sendUpdateQueryResult(int num_of_rows){
     const char* update_command = "UPDATE";
     const char* num_of_rows_value = to_string(num_of_rows).c_str();
 
-    _socket.write((char*)COMMAND_KEY, sizeof(COMMAND_KEY));
+    _socket.write((char*) &COMMAND_KEY, sizeof(COMMAND_KEY));
     writeSizeOfBlock(
             sizeof(uint32_t) +
             strlen(update_command) + 
@@ -356,56 +356,76 @@ void PgsqlWorker::writeSizeOfBlock(size_t size){
     _socket.write((char*) &message_size, sizeof(message_size));
 }
 
-void PgsqlWorker::getStartupMessage(){
+void PgsqlWorker::getStartupMessage(bool* status){
     uint32_t message_size;
     uint32_t protocol_version_number;
     char* parameters;
-    //char* username;
-    try{
-        message_size = (uint32_t)getMessageSize() - sizeof(protocol_version_number);
-        protocol_version_number = (uint32_t)getMessageSize();
-        parameters = new char[message_size];
-        _socket.read(parameters, message_size);
+
+    while(true)
+        try{
+            message_size = (uint32_t)getMessageSize() - sizeof(protocol_version_number);
+            if(message_size > 0){
+                protocol_version_number = (uint32_t)getMessageSize();
+                parameters = new char[message_size];
+                _socket.read(parameters, message_size);
+                *status = true;
+                return;
+            }
+            else break;
+        }
+        catch(const std::exception& e){ }
+
+    *status = false;
+    printf("%s\n", "PgsqlServer::getStartupMessage() - Wrong message. Conncetion closed.");
+}
+
+char* PgsqlWorker::getPassword(bool* status){
+    char key;
+
+    while(true)
+        try{ 
+            _socket.read(&key, sizeof(key)); 
+            break;
+        }
+        catch(const std::exception& e){ }
+
+    if(key=='p'){
+        *status = true;
+        return readMessage();   
     }
-    catch(const std::exception& e){ }
+
+    *status = false;
+    printf("%s\n", "PgsqlServer::getPassword() - Wrong password message. Conncetion closed.");
+    return nullptr;
 }
 
 //Returned the  ssl code, depends on protocol version
-uint32_t PgsqlWorker::getSSLRequest(){
-    uint32_t m_size;
-    try{
-        m_size = (uint32_t)getMessageSize();
-        if(m_size == 8)
-            return (uint32_t)getMessageSize();
-    }
-    catch (const std::exception& e){ 
-        return 0;
-    }
+uint32_t PgsqlWorker::getSSLRequest(bool* status){
+    const size_t expected_size = 4;
+    size_t size = 0;
+    while(true)
+        try{ 
+            size = getMessageSize(); 
+            if(size == expected_size){
+                *status = true;
+                return (uint32_t)getMessageSize();
+            }
+            else
+                break;
+        }
+        catch (const std::exception& e){ }
+
+    *status = false;
+    printf("%s\n", "PgsqlServer::getSSLRequest() - Wrong ssl code. Conncetion closed.");
     return 0;
 }
 
-void PgsqlWorker::run() {
-    const regex select_query_pattern("^SELECT v FROM kv WHERE k = \'(.*)\';");
-    const regex select_number_query_pattern("^SELECT ([-]?[0-9]*\\.[0-9]+|[-]?[0-9]+);");
-    const regex select_range_query_pattern("^SELECT k, v FROM kv WHERE k >= \'(.*)\' AND k <= \'(.*)\';");
-    const regex insert_query_pattern("^INSERT INTO kv VALUES \\(\'(.*)\', \'(.*)\'\\);");
-    const regex update_query_pattern("^UPDATE kv SET v = \'(.*)\' WHERE k = \'(.*)\';");
-    const regex delete_query_pattern("^DELETE FROM kv WHERE k = \'(.*)\';");
+void PgsqlWorker::sendPasswordType(){
     const unsigned char pass_delimiter[1]={0xDE};
     const unsigned char pass_type[1]={_AUTH_REQ(AUTH_REQ_MD5)};
     const unsigned char noise[2]={0xF9, 0xF9};
 
-    cmatch cm;
-    char key;
-    char* received_message;
-
-    getSSLRequest();
-            
-    _socket.write((char*) &NOTICE_RESPONSE_KEY, sizeof(NOTICE_RESPONSE_KEY));
-
-    getStartupMessage();
-
-    _socket.write(RESPONSE_MESSAGE_KEY,sizeof(RESPONSE_MESSAGE_KEY));
+    _socket.write(&RESPONSE_MESSAGE_KEY, sizeof(RESPONSE_MESSAGE_KEY));
 
     writeSizeOfBlock(
         sizeof(uint32_t) + 
@@ -420,29 +440,50 @@ void PgsqlWorker::run() {
     _socket.write((char*) pass_delimiter, sizeof(pass_delimiter));
     _socket.write((char*) pass_type, sizeof(pass_type));
     _socket.write((char*) noise, sizeof(noise));
-    
-    while(true)
-        try{
-            _socket.read(&key, sizeof(key));
-            if(key=='p'){
-                received_message = readMessage();
-                break;
-            }
-            else
-                throw std::runtime_error("PgsqlServer::run() - wrong sequnce of messages. Password message should be next.");
-        }
-        catch(const std::exception& e){ }
+}
 
+void PgsqlWorker::run() {
+    const regex select_query_pattern("^SELECT v FROM kv WHERE k = \'(.*)\';");
+    const regex select_number_query_pattern("^SELECT ([-]?[0-9]*\\.[0-9]+|[-]?[0-9]+);");
+    const regex select_range_query_pattern("^SELECT k, v FROM kv WHERE k >= \'(.*)\' AND k <= \'(.*)\';");
+    const regex insert_query_pattern("^INSERT INTO kv VALUES \\(\'(.*)\', \'(.*)\'\\);");
+    const regex update_query_pattern("^UPDATE kv SET v = \'(.*)\' WHERE k = \'(.*)\';");
+    const regex delete_query_pattern("^DELETE FROM kv WHERE k = \'(.*)\';");
+
+    cmatch cm;
+    char key;
+    char* received_message;
+    bool status = false;
+
+    //First message from client. Send SSL code of protocol.
+    getSSLRequest(&status);
+    if(!status)
+        return;
+
+    //Send notice responce key. Noticed client about connection.
+    _socket.write((char*) &NOTICE_RESPONSE_KEY, sizeof(NOTICE_RESPONSE_KEY));
+
+    //Get information about user, database name and other.
+    getStartupMessage(&status);
+    if(!status)
+        return;
+
+    //Send to client password type.
+    sendPasswordType();
+    
+    //Get password from client in password type style.
+    getPassword(&status);
+    if(!status)
+        return;
+
+    //Send to client information about server, such as application name, server version, timezone and etc.
     sendServerConfiguration();
 
+    //Cycle which accept queries from client
     while(true){
-        try{
-            _socket.read(&key, sizeof(key));
-        }
-        catch(const std::exception& e){
-            continue;
-        }
-
+        //Query type key. Now supports only Q and X.
+        try{ _socket.read(&key, sizeof(key)); }
+        catch(const std::exception& e){ continue; }
         //The key of query
         if(key=='Q'){
             received_message = readMessage();
@@ -512,23 +553,24 @@ void PgsqlWorker::run() {
             else if(regex_match(received_message,cm,update_query_pattern))
                 sendUpdateQueryResult(1);
 
-            else
-                throw std::runtime_error("PgsqlServer::run() - wrong query. This syntax is not supported.");               
+            else{
+                printf("%s\n", "Wrong message from client. Conncetion closed.");
+                return;               
+            }
 
             printf("%s\n", received_message);
             defer(delete received_message);
         }
-
         //Close server message
         else if(key=='X'){
             getMessageSize();
             break;
         }
-        
-
+        else{
+            printf("%s\n", "PgsqlServer::run() - Wrong message key. Conncetion closed.");
+            return;
+        }   
     }
-
-   
 }
 
 /*

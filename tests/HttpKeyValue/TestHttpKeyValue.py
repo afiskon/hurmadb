@@ -11,16 +11,17 @@ import time
 import socket
 import sys
 
-START = os.environ.get('HURMADB_PORT') is None
-PORT = int(os.getenv('HURMADB_PORT', 8000 + int(random.random()*1000)))
+START = os.environ.get('HURMADB_H_PORT') is None
+PORT = int(os.getenv('HURMADB_H_PORT', 8000 + int(random.random()*1000)))
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+FLAG = '-h' #special flag for http server port
 
 def hurmadb_start(port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
-    if START:
-        return subprocess.Popen(['../../hurmadb', str(port)])
+    if START_H:
+        return subprocess.Popen(['../../hurmadb',FLAG, str(port)])
     else:
         return None
 
@@ -30,7 +31,7 @@ def hurmadb_stop(pobj):
     """
     requests.put('http://localhost:{}/v1/_stop'.format(PORT))
 
-    if START:
+    if START_H:
         pobj.wait()
 
 class TestBasic:
@@ -91,7 +92,7 @@ class TestBasic:
     def test_range_query(self):
         self.log.debug("Running test_kv2")
         url1 = 'http://localhost:{}/v1/kv/val2'.format(PORT)
-        doc1 = {'foo':'bar', 'baz':['qux']}
+        doc1 = {'foo':'bar'}
         url2 = 'http://localhost:{}/v1/kv/val3'.format(PORT)
         doc2 = 'qwerty'
         query = 'http://localhost:{}/v1/kv/val1/val4'.format(PORT)
@@ -104,7 +105,7 @@ class TestBasic:
 
         # Check that we receive expended answer 
         res = requests.get(query)
-        planned_text = '{"val2":{"foo":"bar","baz":["qux"]},"val3":"qwerty"}'
+        planned_text = '{"val2":{"foo":"bar"},"val3":"qwerty"}'
         assert res.text == planned_text, "Wrong result of query"
 
         # Delete the document

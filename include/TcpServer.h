@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <TcpServer.h>
+#include <HttpRequestHandler.h>
 #include <Socket.h>
 #include <atomic>
 #include <pcre.h>
@@ -12,12 +14,10 @@ class TcpServer {
 public:
     TcpServer(void* (*workerThreadProc)(void*));
     ~TcpServer();
-
-    TcpServer(TcpServer const&) = delete;
-    void operator=(TcpServer const&) = delete;
-
     void listen(const char* host, int port);
     void accept(const std::atomic_bool& terminate_flag);
+    TcpServer(TcpServer const&) = delete;
+    void operator=(TcpServer const&) = delete;
 
 protected:
     virtual void* createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter) = 0;

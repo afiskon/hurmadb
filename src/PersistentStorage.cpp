@@ -32,8 +32,12 @@ PersistentStorage::~PersistentStorage() {
 
 void PersistentStorage::set(const std::string& key, const std::string& value) {
     Document val;
-
-    if(val.Parse(value.c_str()).HasParseError())
+    std::string test_string;
+    if(value[0] != '[' && value[0]!= '{' && value[0] != '"')
+        test_string = '"'+value+'"';
+    else
+        test_string = value;
+    if(val.Parse(test_string.c_str()).HasParseError())
         throw std::runtime_error("PersistentStore::set() - validation failed");
 
     Status s = _db->Put(WriteOptions(), key, value);
@@ -77,6 +81,26 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
     result.Accept(writer);
 
     return sb.GetString();
+}
+
+// TODO: impelemt more efficient interation for wide ranges
+deque<vector<string>> PersistentStorage::getRangeQueue(const std::string& key_from, const std::string& key_to) {
+    Iterator* it = _db->NewIterator(ReadOptions());
+    defer(delete it);
+    deque<vector<string>> rows;
+                
+    for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {
+        vector<string> row;
+        row.push_back(it->key().ToString());
+        row.push_back(it->value().ToString());
+        rows.push_front(row);
+    }
+
+    // Check for any errors found during the scan
+    if(!it->status().ok())
+        throw std::runtime_error("PersistentStore::getRange() - error during the scan");
+
+    return rows;
 }
 
 void PersistentStorage::del(const std::string& key, bool* found) {

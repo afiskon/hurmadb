@@ -84,7 +84,7 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
     FD_SET(_listen_socket, &rfds);
 
     int res = select(_listen_socket + 1, &rfds, (fd_set*)0, (fd_set*)0, &tv);
-    if(res > 0){
+    if(res > 0) {
         int accepted_socket = ::accept(_listen_socket, 0, 0);
         if(accepted_socket == -1)
             throw std::runtime_error("TcpServer::accept() - accept() call failed");
@@ -120,6 +120,4 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
     /* timeout - check a terminate flag */
     if(terminate_flag.load())
         return;
-
-
 }

@@ -1,9 +1,9 @@
 /* vim: set ai et ts=4 sw=4: */
 
 #pragma once
+#include <cstdint>
 #include <stdio.h>
 #include <string>
-#include <cstdint>
 
 using namespace std;
 
@@ -21,7 +21,7 @@ public:
     const char* getSSeverity();
     const char* getVSeverity();
     int getSSeveritySize();
-    int getVSeveritySize(); 
+    int getVSeveritySize();
     bool isVSeverityAvailable();
     const char* getCode();
     int getCodeSize();
@@ -29,7 +29,6 @@ public:
     int getMessageSize();
     int getSizeOfFullErrorMessage();
 
-    
 private:
     const char* v_version = "9.6";
     const char s_severity_token = 'S';

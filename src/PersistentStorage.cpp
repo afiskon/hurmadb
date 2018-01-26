@@ -33,8 +33,8 @@ PersistentStorage::~PersistentStorage() {
 void PersistentStorage::set(const std::string& key, const std::string& value) {
     Document val;
     std::string test_string;
-    if(value[0] != '[' && value[0]!= '{' && value[0] != '"')
-        test_string = '"'+value+'"';
+    if(value[0] != '[' && value[0] != '{' && value[0] != '"')
+        test_string = '"' + value + '"';
     else
         test_string = value;
     if(val.Parse(test_string.c_str()).HasParseError())
@@ -88,7 +88,7 @@ deque<vector<string>> PersistentStorage::getRangeQueue(const std::string& key_fr
     Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);
     deque<vector<string>> rows;
-                
+
     for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {
         vector<string> row;
         row.push_back(it->key().ToString());

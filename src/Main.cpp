@@ -1,17 +1,17 @@
 /* vim: set ai et ts=4 sw=4: */
 
-#include <PgsqlServer.h>
-#include <TcpServer.h>
 #include <HttpServer.h>
 #include <PersistentStorage.h>
+#include <PgsqlServer.h>
+#include <TcpServer.h>
 #include <atomic>
 #include <iostream>
 #include <map>
 #include <signal.h>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <unistd.h>
+#include <utility>
 
 // TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
 // incremental backups and replication. Write
@@ -85,16 +85,15 @@ int main(int argc, char** argv) {
     int httpPort = 8080;
     int pgsqlPort = 5332;
 
-    while ((c = getopt (argc, argv, "p:h:")) != -1)
-    switch (c) {
-        case 'h':
-        httpPort = atoi(optarg);
-        break;
-        case 'p':
-        pgsqlPort = atoi(optarg);
-        break;
-    }
-
+    while((c = getopt(argc, argv, "p:h:")) != -1)
+        switch(c) {
+            case 'h':
+                httpPort = atoi(optarg);
+                break;
+            case 'p':
+                pgsqlPort = atoi(optarg);
+                break;
+        }
 
     if(httpPort <= 0 || httpPort >= 65536) {
         std::cerr << "Invalid httpPort number!" << std::endl;
@@ -124,6 +123,6 @@ int main(int argc, char** argv) {
         pgsqlServer.accept(terminate_flag);
         httpServer.accept(terminate_flag);
     }
-    
+
     return 0;
 }

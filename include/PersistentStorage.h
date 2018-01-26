@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <deque>
 #include <Storage.h>
+#include <deque>
 #include <rocksdb/db.h>
 #include <string>
 

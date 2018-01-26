@@ -1,5 +1,18 @@
 /* vim: set ai et ts=4 sw=4: */
 
+/*
+TODO: PsqlServer works fine with psycopg2, but currently
+      it doesn't work with psql:
+
+$ psql --version
+psql (PostgreSQL) 10.0
+
+$ psql -hlocalhost -p5332
+psql: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+*/
+
 #include "ErrorMesage.h"
 #include "PgsqlErrorCodes.h"
 #include "PgsqlServerConfiguration.h"

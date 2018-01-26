@@ -118,8 +118,10 @@ int main(int argc, char** argv) {
     pgsqlServer.listen("127.0.0.1", pgsqlPort);
     httpServer.listen("127.0.0.1", httpPort);
 
+    // Unlike POSIX accept() procedure none of these .accept methods is blocking
     while(!terminate_flag.load()) {
-        //Unlike POSIX accept() procedure none of these .accept methods is blocking
+        // TODO: This seems to be a bottleneck during test execution.
+        //       Run every accept() on a separate thread to speed things up.
         pgsqlServer.accept(terminate_flag);
         httpServer.accept(terminate_flag);
     }

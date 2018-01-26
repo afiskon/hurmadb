@@ -32,12 +32,8 @@ PersistentStorage::~PersistentStorage() {
 
 void PersistentStorage::set(const std::string& key, const std::string& value) {
     Document val;
-    std::string test_string;
-    if(value[0] != '[' && value[0] != '{' && value[0] != '"')
-        test_string = '"' + value + '"';
-    else
-        test_string = value;
-    if(val.Parse(test_string.c_str()).HasParseError())
+
+    if(val.Parse(value.c_str()).HasParseError())
         throw std::runtime_error("PersistentStore::set() - validation failed");
 
     Status s = _db->Put(WriteOptions(), key, value);

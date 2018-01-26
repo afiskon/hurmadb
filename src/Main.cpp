@@ -97,12 +97,12 @@ int main(int argc, char** argv) {
     }
 
     if(httpPort <= 0 || httpPort >= 65536) {
-        std::cerr << "Invalid httpPort number!" << std::endl;
+        std::cerr << "Invalid HTTP port number!" << std::endl;
         return 2;
     }
 
     if(pgsqlPort <= 0 || pgsqlPort >= 65536) {
-        std::cerr << "Invalid pgsqlPort number!" << std::endl;
+        std::cerr << "Invalid PgSql port number!" << std::endl;
         return 2;
     }
 
@@ -116,8 +116,11 @@ int main(int argc, char** argv) {
     httpServer.addHandler(HTTP_PUT, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVPutHandler);
     httpServer.addHandler(HTTP_DELETE, "(?i)^/v1/kv/([\\w-]+)/?$", &httpKVDeleteHandler);
 
-    pgsqlServer.listen("127.0.0.1", pgsqlPort);
+    std::cout << "Starting HTTP server on port " << httpPort << std::endl;
     httpServer.listen("127.0.0.1", httpPort);
+
+    std::cout << "Starting PgSql server on port " << pgsqlPort << std::endl;
+    pgsqlServer.listen("127.0.0.1", pgsqlPort);
 
     // Unlike POSIX accept() procedure none of these .accept methods is blocking
     while(!terminate_flag.load()) {

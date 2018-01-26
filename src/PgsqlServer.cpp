@@ -385,7 +385,7 @@ void PgsqlWorker::getStartupMessage(bool* status) {
         }
 
     *status = false;
-    printf("%s\n", "PgsqlServer::getStartupMessage() - Wrong message. Conncetion closed.");
+    printf("%s\n", "PgsqlServer::getStartupMessage() - Wrong message. Connection closed.");
 }
 
 char* PgsqlWorker::getPassword(bool* status) {
@@ -403,7 +403,7 @@ char* PgsqlWorker::getPassword(bool* status) {
         password = readMessage();
     } else {
         *status = false;
-        printf("%s\n", "PgsqlServer::getPassword() - Wrong password message. Conncetion closed.");
+        printf("%s\n", "PgsqlServer::getPassword() - Wrong password message. Connection closed.");
         password = nullptr;
     }
 
@@ -426,7 +426,7 @@ uint32_t PgsqlWorker::getSSLRequest(bool* status) {
         }
 
     *status = false;
-    printf("%s\n", "PgsqlServer::getSSLRequest() - Wrong ssl code. Conncetion closed.");
+    printf("%s\n", "PgsqlServer::getSSLRequest() - Wrong ssl code. Connection closed.");
     return 0;
 }
 
@@ -572,7 +572,7 @@ void PgsqlWorker::run() {
             getMessageSize();
             break;
         } else {
-            printf("%s\n", "PgsqlServer::run() - Wrong message key. Conncetion closed.");
+            printf("%s\n", "PgsqlServer::run() - Wrong message key. Connection closed.");
             break;
         }
     }

@@ -91,7 +91,7 @@ class TestBasic:
     def test_range_query(self):
         self.log.debug("Running test_kv2")
         url1 = 'http://localhost:{}/v1/kv/val2'.format(PORT_HTTP)
-        doc1 = {'foo':'bar'}
+        doc1 = {'foo':'bar', 'baz': ['qux']}
         url2 = 'http://localhost:{}/v1/kv/val3'.format(PORT_HTTP)
         doc2 = 'qwerty'
         query = 'http://localhost:{}/v1/kv/val1/val4'.format(PORT_HTTP)
@@ -104,8 +104,8 @@ class TestBasic:
 
         # Check that we receive expended answer 
         res = requests.get(query)
-        planned_text = '{"val2":{"foo":"bar"},"val3":"qwerty"}'
-        assert res.text == planned_text, "Wrong result of query"
+        expected_text = '{"val2":{"foo":"bar","baz":["qux"]},"val3":"qwerty"}'
+        assert res.text == expected_text, "Wrong query result"
 
         # Delete the document
         res = requests.delete(url1)

@@ -13,16 +13,8 @@
 #include <unistd.h>
 #include <utility>
 
-// TODO: support global 64-bit _rev in ::set, ::delete. Useful for snapshots,
-// incremental backups and replication. Write
-// a multithreaded test
 // TODO: add a script that runs clang static analyzer + cppcheck
-// TODO: plugable porotols, e.g. support Memcached protocol
-// TODO: support rangescans
-// TODO: script - run under MemorySanitizer + other kinds of sanitizers
 // TODO: see `grep -r TODO ./`
-
-// TODO: Keyspaces class
 
 PersistentStorage storage;
 

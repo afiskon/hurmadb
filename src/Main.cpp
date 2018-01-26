@@ -74,6 +74,8 @@ static void httpStopPutHandler(const HttpRequest&, HttpResponse& resp) {
 int main(int argc, char** argv) {
 
     int c;
+    bool httpPortSet = false;
+    bool pgsqlPortSet = false;
     int httpPort = 8080;
     int pgsqlPort = 5332;
 
@@ -81,11 +83,18 @@ int main(int argc, char** argv) {
         switch(c) {
             case 'h':
                 httpPort = atoi(optarg);
+                httpPortSet = true;
                 break;
             case 'p':
                 pgsqlPort = atoi(optarg);
+                pgsqlPortSet = true;
                 break;
         }
+
+    if((!httpPortSet) || (!pgsqlPortSet)) {
+        std::cerr << "Usage: " << argv[0] << " -h http_port -p pgsql_port" << std::endl;
+        return 2;
+    }
 
     if(httpPort <= 0 || httpPort >= 65536) {
         std::cerr << "Invalid httpPort number!" << std::endl;

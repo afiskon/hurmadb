@@ -13,20 +13,18 @@ import sys
 import psycopg2
 
 START = os.environ.get('HURMADB_H_PORT') is None
-PORT = int(os.getenv('HURMADB_P_PORT', 8000 + int(random.random()*1000)))
-HTTPSERVER_PORT = int(os.getenv('HURMADB_H_PORT', 7000 + int(random.random()*1000)))
-con = None
+PORT_PGSQL = int(os.getenv('HURMADB_P_PORT', 8000 + int(random.random()*1000)))
+PORT_HTTP = int(os.getenv('HURMADB_H_PORT', 7000 + int(random.random()*1000)))
+con = None # TODO: rewrite without these two global variables
 cur = None
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-FLAG = '-p' #special flag for pgsql server port
-HTTP_FLAG = '-h' #special flag for http server port
 
-def hurmadb_start(port, httpserver_port):
+def hurmadb_start(http_port, pgsql_port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['../../hurmadb',FLAG, str(port), HTTP_FLAG, str(httpserver_port)])
+        return subprocess.Popen(['../../hurmadb','-h', str(http_port), '-p', str(pgsql_port)])
     else:
         return None
 
@@ -43,7 +41,7 @@ def hurmadb_stop(pobj):
     """
     Close all servers
     """
-    requests.put('http://localhost:{}/v1/_stop'.format(HTTPSERVER_PORT))
+    requests.put('http://localhost:{}/v1/_stop'.format(PORT_HTTP))
 
     if START:
         pobj.wait()
@@ -51,10 +49,10 @@ def hurmadb_stop(pobj):
 class TestBasic:
     def setup_class(self):
         self.log = logging.getLogger('HurmaDB')
-        self.pobj = hurmadb_start(PORT, HTTPSERVER_PORT)
+        self.pobj = hurmadb_start(PORT_HTTP, PORT_PGSQL)
         time.sleep(3) # Give RocksDB some time to initialize
-        self.log.debug("HurmaDB: http-server started on port {}".format(HTTPSERVER_PORT))
-        self.log.debug("HurmaDB: pgsql-server started on port {}".format(PORT))
+        self.log.debug("HurmaDB: http-server started on port {}".format(PORT_HTTP))
+        self.log.debug("HurmaDB: pgsql-server started on port {}".format(PORT_PGSQL))
 
     def teardown_class(self):
         hurmadb_stop(self.pobj)

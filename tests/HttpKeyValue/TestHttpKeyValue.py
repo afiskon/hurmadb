@@ -12,17 +12,16 @@ import socket
 import sys
 
 START = os.environ.get('HURMADB_H_PORT') is None
-START_P = os.environ.get('HURMADB_P_PORT') is None
-PORT = int(os.getenv('HURMADB_H_PORT', 8000 + int(random.random()*1000)))
+PORT_HTTP = int(os.getenv('HURMADB_H_PORT', 8000 + int(random.random()*1000)))
+PORT_PGSQL = int(os.getenv('HURMADB_P_PORT', 5000 + int(random.random()*1000)))
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-FLAG = '-h' #special flag for http server port
 
-def hurmadb_start(port):
+def hurmadb_start(http_port, pgsql_port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['../../hurmadb',FLAG, str(port)])
+        return subprocess.Popen(['../../hurmadb', '-h', str(http_port), '-p', str(pgsql_port)])
     else:
         return None
 
@@ -30,18 +29,16 @@ def hurmadb_stop(pobj):
     """
     Stop HurmaDB process created by hurmadb_start()
     """
-    if START_P:
-        requests.put('http://localhost:{}/v1/_stop'.format(PORT))
-
     if START:
+        requests.put('http://localhost:{}/v1/_stop'.format(PORT_HTTP))
         pobj.wait()
 
 class TestBasic:
     def setup_class(self):
         self.log = logging.getLogger('HurmaDB')
-        self.pobj = hurmadb_start(PORT)
+        self.pobj = hurmadb_start(PORT_HTTP, PORT_PGSQL)
         time.sleep(3) # Give RocksDB some time to initialize
-        self.log.debug("HurmaDB started on port {}".format(PORT))
+        self.log.debug("HurmaDB started on port {}".format(PORT_HTTP))
 
     def teardown_class(self):
         hurmadb_stop(self.pobj)
@@ -49,17 +46,17 @@ class TestBasic:
 
     def test_index(self):
         self.log.debug("Running test_index")
-        res = requests.get('http://localhost:{}/'.format(PORT))
+        res = requests.get('http://localhost:{}/'.format(PORT_HTTP))
         assert(res.status_code == 200)
 
     def test_not_found(self):
         self.log.debug("Running test_not_found")
-        res = requests.get('http://localhost:{}/no-such-page/'.format(PORT))
+        res = requests.get('http://localhost:{}/no-such-page/'.format(PORT_HTTP))
         assert(res.status_code == 404)
 
     def test_kv(self):
         self.log.debug("Running test_kv")
-        url = 'http://localhost:{}/v1/kv/Some_Key-123'.format(PORT)
+        url = 'http://localhost:{}/v1/kv/Some_Key-123'.format(PORT_HTTP)
         doc = {'foo':'bar', 'baz':['qux']}
         # Make sure there is no such document
         res = requests.get(url)
@@ -84,7 +81,7 @@ class TestBasic:
     # Test validation of stored value
     def test_validation(self):
         self.log.debug("Running test_validation")
-        url = 'http://localhost:{}/v1/kv/S1'.format(PORT)
+        url = 'http://localhost:{}/v1/kv/S1'.format(PORT_HTTP)
         doc = '"asdag'
         # Create a new document
         res = requests.put(url, data = doc)
@@ -93,11 +90,11 @@ class TestBasic:
     # Test range_query on the expected result
     def test_range_query(self):
         self.log.debug("Running test_kv2")
-        url1 = 'http://localhost:{}/v1/kv/val2'.format(PORT)
+        url1 = 'http://localhost:{}/v1/kv/val2'.format(PORT_HTTP)
         doc1 = {'foo':'bar'}
-        url2 = 'http://localhost:{}/v1/kv/val3'.format(PORT)
+        url2 = 'http://localhost:{}/v1/kv/val3'.format(PORT_HTTP)
         doc2 = 'qwerty'
-        query = 'http://localhost:{}/v1/kv/val1/val4'.format(PORT)
+        query = 'http://localhost:{}/v1/kv/val1/val4'.format(PORT_HTTP)
         
         # Create a new document
         res = requests.put(url1, json = doc1)
@@ -122,7 +119,7 @@ class TestBasic:
     # Test multiple message exchange during one connection
     def test_keep_alive(self):
         conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        conn.connect(('localhost', PORT))
+        conn.connect(('localhost', PORT_HTTP))
         conn.send(b"GET / HTTP/1.1\r\n\r\n")
         data = conn.recv(1024)
         assert(data.startswith(b"HTTP/1.1 200 OK"))
@@ -134,7 +131,7 @@ class TestBasic:
     # Test delete of not existed key
     def test_delete(self):
         self.log.debug("Running test_delete")
-        url = 'http://localhost:{}/v1/kv/not_existed_key'.format(PORT)
+        url = 'http://localhost:{}/v1/kv/not_existed_key'.format(PORT_HTTP)
         # Delete the document
         res = requests.delete(url)
         assert(res.status_code == 404)

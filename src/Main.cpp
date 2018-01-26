@@ -13,9 +13,6 @@
 #include <unistd.h>
 #include <utility>
 
-// TODO: add a script that runs clang static analyzer + cppcheck
-// TODO: see `grep -r TODO ./`
-
 PersistentStorage storage;
 
 static std::atomic_bool terminate_flag(false);
@@ -77,7 +74,7 @@ int main(int argc, char** argv) {
     bool httpPortSet = false;
     bool pgsqlPortSet = false;
     int httpPort = 8080;
-    int pgsqlPort = 5332;
+    int pgsqlPort = 5432;
 
     while((c = getopt(argc, argv, "p:h:")) != -1)
         switch(c) {

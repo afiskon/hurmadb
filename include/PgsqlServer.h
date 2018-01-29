@@ -33,6 +33,9 @@ private:
     std::string _msg;
 };
 
+/**
+ * @todo Document PgsqlWorker.
+ */
 class PgsqlWorker {
 public:
     PgsqlWorker(Socket& socket, PersistentStorage* storage);
@@ -99,6 +102,9 @@ private:
     void sendPasswordType();
 };
 
+/**
+ * @todo Document PgsqlServer
+ */
 class PgsqlServer : public TcpServer {
 public:
     PgsqlServer(PersistentStorage* storage);

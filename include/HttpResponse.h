@@ -5,6 +5,9 @@
 #include <map>
 #include <string>
 
+/**
+ * @todo Document HttpStatus class.
+ */
 class HttpStatus {
 public:
     HttpStatus();
@@ -35,6 +38,9 @@ extern const HttpStatus HTTP_STATUS_NOT_FOUND;
 /* 5xx */
 extern const HttpStatus HTTP_STATUS_INTERNAL_ERROR;
 
+/**
+ * @todo Document HttpResponse class.
+ */
 class HttpResponse {
 public:
     HttpResponse();

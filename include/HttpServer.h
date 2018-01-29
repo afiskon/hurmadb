@@ -32,6 +32,9 @@ private:
     std::string _msg;
 };
 
+/**
+ * @todo Document HttpWorker class.
+ */
 class HttpWorker {
 public:
     HttpWorker(Socket& socket, HttpHandlerListItem* handlersList);
@@ -45,6 +48,9 @@ private:
     void _deserializeHttpRequest(Socket& socket, HttpRequest& req);
 };
 
+/**
+ * @todo Document HttpServer class.
+ */
 class HttpServer : public TcpServer {
 public:
     HttpServer();

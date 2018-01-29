@@ -8,6 +8,9 @@
 
 enum HttpMethod { HTTP_GET, HTTP_POST, HTTP_PUT, HTTP_DELETE };
 
+/**
+ * @todo Document HttpRequest class.
+ */
 class HttpRequest {
 public:
     HttpRequest();

@@ -10,6 +10,9 @@
 #include <stdexcept>
 #include <string>
 
+/**
+ * @todo Document TcpServer class.
+ */
 class TcpServer {
 public:
     TcpServer(void* (*workerThreadProc)(void*));

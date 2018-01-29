@@ -73,12 +73,17 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
 }
 
 /**
+ * @brief Execute range scan.
+ * 
+ * @param key_from A key to scan from
+ * @param key_to A key to scan to
+ *
+ * @returns JSON document with key-value pairs found during the scan. Both key_from and key_to are included to the range.
+ *
  * @throws std::runtime_error
  *
- * @deprecated Use PersistenStorage::getRange instead
- *
- * @todo Remove this method
- */
+ * @todo Return a vector of key-value pairs, do JSON encoding elsewhere.
+ */ 
 std::string PersistentStorage::getRangeJson(const std::string& key_from, const std::string& key_to) {
     Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);
@@ -107,37 +112,6 @@ std::string PersistentStorage::getRangeJson(const std::string& key_from, const s
     result.Accept(writer);
 
     return sb.GetString();
-}
-
-/**
- * @brief Execute a range scan.
- * 
- * @param key_from A key to scan from
- * @param key_to A key to scan to
- *
- * @returns Key-value pairs found during the scan. Both key_from and key_to are included to the range.
- * @throws std::runtime_error
- *
- * @todo Impelemt more efficient interation for wide ranges
- * @todo Return vector<pair<string,string>>
- */
-deque<vector<string>> PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
-    Iterator* it = _db->NewIterator(ReadOptions());
-    defer(delete it);
-    deque<vector<string>> rows;
-
-    for(it->Seek(key_from); it->Valid() && it->key().ToString() <= key_to; it->Next()) {
-        vector<string> row;
-        row.push_back(it->key().ToString());
-        row.push_back(it->value().ToString());
-        rows.push_front(row);
-    }
-
-    // Check for any errors found during the scan
-    if(!it->status().ok())
-        throw std::runtime_error("PersistentStore::getRange() - error during the scan");
-
-    return rows;
 }
 
 /**

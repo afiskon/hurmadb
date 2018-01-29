@@ -3,10 +3,8 @@
 #pragma once
 
 #include <Storage.h>
-#include <deque>
 #include <rocksdb/db.h>
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -24,7 +22,6 @@ public:
     void set(const std::string& key, const std::string& value);
     std::string get(const std::string& key, bool* found);
     std::string getRangeJson(const std::string& key_from, const std::string& key_to);
-    deque<vector<string>> getRange(const std::string& key_from, const std::string& key_to);
     void del(const std::string& key, bool* found);
 
     PersistentStorage(PersistentStorage const&) = delete;

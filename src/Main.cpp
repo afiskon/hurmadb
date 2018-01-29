@@ -3,7 +3,7 @@
 /**
  * @mainpage HurmaDB
  *
- * HurmaDB is an experimental database.
+ * HurmaDB is an experimental NoSQL database. It uses RocksDB as a disk backend and provides REST API.
  *
  * @todo Write a better main page.
  */

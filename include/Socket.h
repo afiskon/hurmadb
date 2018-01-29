@@ -9,6 +9,7 @@
  * @brief Socket representation.
  * 
  * Provides various utility methods that are more convenient than POSIX API.
+ * Socket is not copyable.
  */
 class Socket {
 public:

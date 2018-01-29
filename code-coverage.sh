@@ -11,7 +11,7 @@ echo ">>> Starting HurmaDB"
 ./hurmadb -h 8080 &
 sleep 2 # just to be safe
 echo ">>> Running tests..."
-HURMADB_H_PORT=8080 make test
+HURMADB_HTTP_PORT=8080 make test
 echo ">>> Stopping HurmaDB"
 curl -XPUT http://localhost:8080/v1/_stop
 sleep 5 # give some time to write .gcda files

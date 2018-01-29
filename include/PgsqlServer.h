@@ -35,6 +35,7 @@ private:
 
 /**
  * @todo Document PgsqlWorker.
+ * @todo Figure out why code-coverage.sh doesn't work with this class (gdb says everything is executed)
  */
 class PgsqlWorker {
 public:

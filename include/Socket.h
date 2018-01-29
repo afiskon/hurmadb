@@ -5,6 +5,11 @@
 #include <unistd.h>
 #include <vector>
 
+/**
+ * @brief Socket representation.
+ * 
+ * Provides various utility methods that are more convenient than POSIX API.
+ */
 class Socket {
 public:
     Socket(int sock);

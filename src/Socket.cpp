@@ -9,15 +9,34 @@
 #include <string>
 #include <unistd.h>
 
+/**
+ * @brief Socket constructor.
+ *
+ * @param sock A socket created using POSIX API.
+ */
 Socket::Socket(int sock)
   : _fd(sock)
   , _bufferSize(0) {
 }
 
+/**
+ * @brief Socket destructor. Closes the socket automatically.
+ */
 Socket::~Socket() {
     close(_fd);
 }
 
+/**
+ * @brief Write given data to the socket.
+ * 
+ * Unlike POSIX API this method writes _exactly_ given number of bytes.
+ * Also it handles signals properly.
+ *
+ * @param buff Pointer to the data
+ * @param buffsize Number of bytes to send
+ *
+ * @throws std::runtime_error 
+ */
 void Socket::write(const char* buff, size_t buffsize) {
     while(buffsize > 0) {
         ssize_t res = ::write(_fd, buff, buffsize);
@@ -32,12 +51,28 @@ void Socket::write(const char* buff, size_t buffsize) {
     }
 }
 
+/**
+ * @brief Write a string to the socket.
+ *
+ * Overloaded method for std::string.
+ *
+ * @see Socket::write
+ */
 void Socket::write(const std::string& buff) {
     write(buff.c_str(), buff.size());
 }
 
-/*
- * Reads buffsize bytes.
+/**
+ * @brief Reads data from the socket.
+ *
+ * Unlike POSIX API this method reads _exactly_ given number of bytes.
+ * Also it handles signals properly and buffers data.
+ *
+ * @param buff Pointer to the data
+ * @param buffsize How many bytes to read
+ *
+ * @throws std::invalid_argument
+ * @throws std::runtime_error
  */
 void Socket::read(char* buff, size_t buffsize) {
     if(buffsize > _MAX_BUFFER_SIZE)
@@ -51,8 +86,15 @@ void Socket::read(char* buff, size_t buffsize) {
     memmove(_buffer, _buffer + buffsize, _bufferSize);
 }
 
-/*
- * Reads a line terminated by \r\n or \n. Returns length of the received line.
+/**
+ * @brief Read a line terminated by \\r\\n or \\n.
+ *
+ * @param buff Where to read the line
+ * @param buffsize Buffer size
+ *
+ * @returns The length of the received line.
+ *
+ * @throws std::runtime_error
  */
 size_t Socket::readLine(char* buff, size_t buffsize) {
     ssize_t end = -1;

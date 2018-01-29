@@ -73,7 +73,7 @@ Run under Valgrind:
 valgrind ./hurmadb -h 8080 -p 5432
 
 workon hurmadb
-HURMADB_H_PORT=8080 HURMADB_P_PORT=5432 make test
+HURMADB_H_PORT=8080 make test
 curl -XPUT http://localhost:8080/v1/_stop
 
 # make sure the result is something like:

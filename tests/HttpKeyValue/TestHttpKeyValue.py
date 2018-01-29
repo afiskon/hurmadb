@@ -13,15 +13,14 @@ import sys
 
 START = os.environ.get('HURMADB_H_PORT') is None
 PORT_HTTP = int(os.getenv('HURMADB_H_PORT', 8000 + int(random.random()*1000)))
-PORT_PGSQL = int(os.getenv('HURMADB_P_PORT', 5000 + int(random.random()*1000)))
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
-def hurmadb_start(http_port, pgsql_port):
+def hurmadb_start(http_port):
     """
     Start HurmaDB on given port, return an object that corresponds to the created process.
     """
     if START:
-        return subprocess.Popen(['../../hurmadb', '-h', str(http_port), '-p', str(pgsql_port)])
+        return subprocess.Popen(['../../hurmadb', '-h', str(http_port)])
     else:
         return None
 
@@ -36,7 +35,7 @@ def hurmadb_stop(pobj):
 class TestBasic:
     def setup_class(self):
         self.log = logging.getLogger('HurmaDB')
-        self.pobj = hurmadb_start(PORT_HTTP, PORT_PGSQL)
+        self.pobj = hurmadb_start(PORT_HTTP)
         time.sleep(3) # Give RocksDB some time to initialize
         self.log.debug("HurmaDB started on port {}".format(PORT_HTTP))
 

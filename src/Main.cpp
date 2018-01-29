@@ -10,7 +10,6 @@
 
 #include <HttpServer.h>
 #include <PersistentStorage.h>
-#include <PgsqlServer.h>
 #include <TcpServer.h>
 #include <atomic>
 #include <iostream>
@@ -83,9 +82,7 @@ int main(int argc, char** argv) {
 
     int c;
     bool httpPortSet = false;
-    bool pgsqlPortSet = false;
     int httpPort = 8080;
-    int pgsqlPort = 5432;
 
     while((c = getopt(argc, argv, "p:h:")) != -1)
         switch(c) {
@@ -93,14 +90,10 @@ int main(int argc, char** argv) {
                 httpPort = atoi(optarg);
                 httpPortSet = true;
                 break;
-            case 'p':
-                pgsqlPort = atoi(optarg);
-                pgsqlPortSet = true;
-                break;
         }
 
-    if((!httpPortSet) || (!pgsqlPortSet)) {
-        std::cerr << "Usage: " << argv[0] << " -h http_port -p pgsql_port" << std::endl;
+    if(!httpPortSet) {
+        std::cerr << "Usage: " << argv[0] << " -h http_port" << std::endl;
         return 2;
     }
 
@@ -109,13 +102,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    if(pgsqlPort <= 0 || pgsqlPort >= 65536) {
-        std::cerr << "Invalid PgSql port number!" << std::endl;
-        return 2;
-    }
-
     HttpServer httpServer;
-    PgsqlServer pgsqlServer(&storage);
 
     httpServer.addHandler(HTTP_GET, "(?i)^/$", &httpIndexGetHandler);
     httpServer.addHandler(HTTP_PUT, "(?i)^/v1/_stop/?$", &httpStopPutHandler);
@@ -127,14 +114,8 @@ int main(int argc, char** argv) {
     std::cout << "Starting HTTP server on port " << httpPort << std::endl;
     httpServer.listen("127.0.0.1", httpPort);
 
-    std::cout << "Starting PgSql server on port " << pgsqlPort << std::endl;
-    pgsqlServer.listen("127.0.0.1", pgsqlPort);
-
     // Unlike POSIX accept() procedure none of these .accept methods is blocking
     while(!terminate_flag.load()) {
-        // TODO: This seems to be a bottleneck during test execution.
-        //       Run every accept() on a separate thread to speed things up.
-        pgsqlServer.accept(terminate_flag);
         httpServer.accept(terminate_flag);
     }
 

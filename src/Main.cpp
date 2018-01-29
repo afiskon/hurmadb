@@ -1,5 +1,13 @@
 /* vim: set ai et ts=4 sw=4: */
 
+/**
+ * @mainpage HurmaDB
+ *
+ * HurmaDB is an experimental database.
+ *
+ * @todo Write a better main page.
+ */
+
 #include <HttpServer.h>
 #include <PersistentStorage.h>
 #include <PgsqlServer.h>

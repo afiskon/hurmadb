@@ -446,6 +446,10 @@ void PgsqlWorker::sendPasswordType() {
     _socket.write((char*)noise, sizeof(noise));
 }
 
+/**
+ *
+ * @todo Use pcre and RegexCache instead of slow and unstable C++ regex class
+ */
 void PgsqlWorker::run() {
     const regex select_query_pattern("^SELECT v FROM kv WHERE k = \'(.*)\';");
     const regex select_number_query_pattern("^SELECT ([-]?[0-9]*\\.[0-9]+|[-]?[0-9]+);");

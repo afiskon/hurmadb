@@ -4,6 +4,12 @@
 
 #include <pcre.h>
 
+/**
+ * @brief Singleton class that stores cached PCRE regular expressions.
+ *
+ * Currently the standard regex class is not stable and fast enough,
+ * so we can't just write `const regex foo("...")`.
+ */
 class RegexCache {
 public:
     static const RegexCache& getInstance();

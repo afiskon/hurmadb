@@ -106,10 +106,10 @@ void TcpServer::accept(const std::atomic_bool& terminate_flag) {
         _workersCounter++;
 
         pthread_t thr;
-        if(pthread_create(&thr, nullptr, _tcpWorkerThreadProc, (void*)arg) != 0) {
+        if(pthread_create(&thr, nullptr, _tcpWorkerThreadProc, arg) != 0) {
             _workersCounter--;
             close(accepted_socket);
-            delete &arg;
+            free(arg);
             throw std::runtime_error("HttpServer::accept() - pthread_create() call failed");
         }
     } /* ready to accept() */

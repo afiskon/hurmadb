@@ -53,7 +53,7 @@ static void* _httpWorkerThreadProc(void* rawArg) {
 
     Socket socket(arg->socket);
     HttpWorker worker(socket, arg->handlers);
-    delete arg;
+    free(arg);
 
     /* No other thread is going to join() this one */
     pthread_detach(pthread_self());
@@ -247,7 +247,7 @@ void HttpServer::addHandler(HttpMethod method, const char* regexpStr, HttpReques
 }
 
 void* HttpServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter) {
-    auto arg = new(std::nothrow) HttpWorkerThreadProcArg();
+    HttpWorkerThreadProcArg* arg = (HttpWorkerThreadProcArg*)malloc(sizeof(HttpWorkerThreadProcArg));
     if(arg == nullptr) {
         close(accepted_socket);
         throw std::runtime_error("HttpServer::createWorkerThreadProcArg() - malloc() call failed");

@@ -32,18 +32,11 @@ def hurmadb_stop(pobj):
     """
     Stop HurmaDB process created by hurmadb_start()
     """
-    """
-    Close only pgsqlServer without closing of all servers
-    """
     if con:
         con.close()
 
-    """
-    Close all servers
-    """
-    requests.put('http://localhost:{}/v1/_stop'.format(PORT_HTTP))
-
     if START:
+        requests.put('http://localhost:{}/v1/_stop'.format(PORT_HTTP))
         pobj.wait()
 
 class TestBasic:

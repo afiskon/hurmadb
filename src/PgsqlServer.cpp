@@ -63,7 +63,7 @@ static void* PgsqlWorkerThreadProc(void* rawArg) {
 
     Socket socket(arg->socket);
     PgsqlWorker worker(socket, arg->storage);
-    delete arg;
+    free(arg);
 
     /* No other thread is going to join() this one */
     pthread_detach(pthread_self());
@@ -597,9 +597,7 @@ PgsqlServer::~PgsqlServer() {
 }
 
 void* PgsqlServer::createWorkerThreadProcArg(int accepted_socket, std::atomic_int* workersCounter) {
-
-    auto arg = new(std::nothrow) PgsqlWorkerThreadProcArg();
-
+    PgsqlWorkerThreadProcArg* arg = (PgsqlWorkerThreadProcArg*)malloc(sizeof(PgsqlWorkerThreadProcArg));
     if(arg == nullptr) {
         close(accepted_socket);
         throw std::runtime_error("PgsqlServer::createWorkerThreadProcArg() - malloc() call failed");

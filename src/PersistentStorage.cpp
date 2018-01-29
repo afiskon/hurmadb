@@ -48,8 +48,14 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
     return value;
 }
 
-// TODO: impelemt more efficient interation for wide ranges
-std::string PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
+/**
+ * @throws std::runtime_error
+ *
+ * @deprecated Use PersistenStorage::getRange instead
+ *
+ * @todo Remove this method
+ */
+std::string PersistentStorage::getRangeJson(const std::string& key_from, const std::string& key_to) {
     Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);
 
@@ -70,7 +76,7 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
 
     // Check for any errors found during the scan
     if(!it->status().ok())
-        throw std::runtime_error("PersistentStore::getRange() - error during the scan");
+        throw std::runtime_error("PersistentStore::getRangeJson() - error during the scan");
 
     StringBuffer sb;
     Writer<StringBuffer> writer(sb);
@@ -79,8 +85,14 @@ std::string PersistentStorage::getRange(const std::string& key_from, const std::
     return sb.GetString();
 }
 
-// TODO: impelemt more efficient interation for wide ranges
-deque<vector<string>> PersistentStorage::getRangeQueue(const std::string& key_from, const std::string& key_to) {
+/**
+ *
+ * @throws std::runtime_error
+ *
+ * @todo Impelemt more efficient interation for wide ranges
+ * @todo Return std::vector
+ */
+deque<vector<string>> PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
     Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);
     deque<vector<string>> rows;

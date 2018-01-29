@@ -519,7 +519,7 @@ void PgsqlWorker::run() {
                 DataColumn key_column("k");
                 DataColumn val_column("v");
                 vector<DataColumn> columns = { key_column, val_column };
-                deque<vector<string>> rows = storage->getRangeQueue(cm.str(1), cm.str(2));
+                deque<vector<string>> rows = storage->getRange(cm.str(1), cm.str(2));
                 sendSelectQueryResult(columns.size(), rows.size(), columns, rows);
             }
 

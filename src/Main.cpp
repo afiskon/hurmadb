@@ -33,12 +33,15 @@ static void httpKVGetHandler(const HttpRequest& req, HttpResponse& resp) {
     resp.setBody(value);
 }
 
+/**
+ * @todo Rewrite using Storage::getRange instead of deprecated getRangeJson
+ */
 static void httpKVGetRangeHandler(const HttpRequest& req, HttpResponse& resp) {
     const std::string& key_from = req.getQueryMatch(0);
     const std::string& key_to = req.getQueryMatch(1);
-    const std::string& value = storage.getRange(key_from, key_to);
+    const std::string& valuesJson = storage.getRangeJson(key_from, key_to);
     resp.setStatus(HTTP_STATUS_OK);
-    resp.setBody(value);
+    resp.setBody(valuesJson);
 }
 
 static void httpKVPutHandler(const HttpRequest& req, HttpResponse& resp) {

@@ -11,6 +11,11 @@
 using namespace rapidjson;
 using namespace rocksdb;
 
+/**
+ * @brief PersistentStorage constructor.
+ *
+ * @throws std::runtime_error
+ */
 PersistentStorage::PersistentStorage() {
     _db = nullptr;
 
@@ -25,11 +30,22 @@ PersistentStorage::PersistentStorage() {
         throw std::runtime_error("PersistentStorage::PersistentStorage() - DB::Open failed");
 }
 
+/**
+ * @brief PersistentStorage destructor.
+ */
 PersistentStorage::~PersistentStorage() {
     if(_db != nullptr)
         delete _db;
 }
 
+/**
+ * @brief Assigns given value to the key.
+ *
+ * @param key Key
+ * @param value Value to assign
+ *
+ * @throws std::runtime_error
+ */
 void PersistentStorage::set(const std::string& key, const std::string& value) {
     Document val;
 
@@ -41,6 +57,14 @@ void PersistentStorage::set(const std::string& key, const std::string& value) {
         throw std::runtime_error("PersistentStore::set() - _db->Put failed");
 }
 
+/**
+ * @brief Read given key.
+ *
+ * @param key Key
+ * @param found After the call will contain true if the key was found or false otherwise
+ *
+ * @return Value that corresponds to the key or an empty string if key doesn't exist.
+ */
 std::string PersistentStorage::get(const std::string& key, bool* found) {
     std::string value = "";
     Status s = _db->Get(ReadOptions(), key, &value);
@@ -86,11 +110,16 @@ std::string PersistentStorage::getRangeJson(const std::string& key_from, const s
 }
 
 /**
+ * @brief Execute a range scan.
+ * 
+ * @param key_from A key to scan from
+ * @param key_to A key to scan to
  *
+ * @returns Key-value pairs found during the scan. Both key_from and key_to are included to the range.
  * @throws std::runtime_error
  *
  * @todo Impelemt more efficient interation for wide ranges
- * @todo Return std::vector
+ * @todo Return vector<pair<string,string>>
  */
 deque<vector<string>> PersistentStorage::getRange(const std::string& key_from, const std::string& key_to) {
     Iterator* it = _db->NewIterator(ReadOptions());
@@ -111,6 +140,12 @@ deque<vector<string>> PersistentStorage::getRange(const std::string& key_from, c
     return rows;
 }
 
+/**
+ * @brief Delete the key.
+ *
+ * @param key Key
+ * @param found After the call will contain true if the key was found or false otherwise
+ */
 void PersistentStorage::del(const std::string& key, bool* found) {
     std::string value = "";
     Status s = _db->Get(ReadOptions(), key, &value);

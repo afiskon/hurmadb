@@ -10,6 +10,9 @@
 
 using namespace std;
 
+/**
+ * @brief Persistent storage implementation. Uses RocksDB as a backend.
+ */
 class PersistentStorage : public Storage {
 public:
     /* un-shadow parent class methods */

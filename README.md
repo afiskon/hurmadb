@@ -62,7 +62,7 @@ make test
 Run a benchmark:
 
 ```
-./hurmadb -h 8080 -p 5432
+./hurmadb -h 8080
 curl -XPUT -d '{"Some":"RandomData123"}' localhost:8080/v1/kv/123 -D - -o -
 wrk -t10 -c10 -d10s http://localhost:8080/v1/kv/123
 ```
@@ -70,7 +70,7 @@ wrk -t10 -c10 -d10s http://localhost:8080/v1/kv/123
 Run under Valgrind:
 
 ```
-valgrind ./hurmadb -h 8080 -p 5432
+valgrind ./hurmadb -h 8080
 
 workon hurmadb
 HURMADB_H_PORT=8080 make test

@@ -8,7 +8,7 @@ Install all dependencies:
 
 ```
 sudo apt-get install cmake g++ libpcre3-dev librocksdb-dev python3-pip \
-  lcov wrk clang-format
+  lcov wrk doxygen clang-format
 ```
 
 Install and configure virtualenvwrapper:
@@ -44,6 +44,13 @@ mkdir build
 cd build
 cmake ..
 make -j2
+```
+
+Build the documentation:
+
+```
+doxygen
+firefox doxygen/html/index.html
 ```
 
 Run tests:

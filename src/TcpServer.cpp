@@ -5,7 +5,6 @@
 #include <TcpServer.h>
 #include <arpa/inet.h>
 #include <atomic>
-#include <defer.h>
 #include <iostream>
 #include <netinet/in.h>
 #include <netinet/tcp.h>

@@ -83,7 +83,7 @@ std::string PersistentStorage::get(const std::string& key, bool* found) {
  * @throws std::runtime_error
  *
  * @todo Return a vector of key-value pairs, do JSON encoding elsewhere.
- */ 
+ */
 std::string PersistentStorage::getRangeJson(const std::string& key_from, const std::string& key_to) {
     Iterator* it = _db->NewIterator(ReadOptions());
     defer(delete it);

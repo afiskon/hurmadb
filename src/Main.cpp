@@ -77,18 +77,18 @@ static void httpStopPutHandler(const HttpRequest&, HttpResponse& resp) {
 }
 
 int main(int argc, char** argv) {
-
-    int c;
     bool httpPortSet = false;
     int httpPort = 8080;
 
-    while((c = getopt(argc, argv, "p:h:")) != -1)
-        switch(c) {
-            case 'h':
-                httpPort = atoi(optarg);
-                httpPortSet = true;
-                break;
+    for(;;) {
+        int ch = getopt(argc, argv, "h:");
+        if(ch == -1) {
+            break;
+        } else if(ch == 'h') {
+            httpPort = atoi(optarg);
+            httpPortSet = true;
         }
+    }
 
     if(!httpPortSet) {
         std::cerr << "Usage: " << argv[0] << " -h http_port" << std::endl;
@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
     std::cout << "Starting HTTP server on port " << httpPort << std::endl;
     httpServer.listen("127.0.0.1", httpPort);
 
-    // Unlike POSIX accept() procedure none of these .accept methods is blocking
     while(!terminate_flag.load()) {
         httpServer.accept(terminate_flag);
     }

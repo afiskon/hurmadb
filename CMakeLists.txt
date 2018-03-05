@@ -19,7 +19,6 @@ find_library(PTHREAD_LIBRARY pthread)
 find_library(PCRE_LIBRARY pcre)
 find_library(ROCKSDB_LIBRARY rocksdb)
 
-include_directories(include)
 include_directories(
     include
     deps/rapidjson/include

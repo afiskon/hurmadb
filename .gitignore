@@ -3,3 +3,4 @@ __pycache__
 .cache
 cov
 doxygen
+.pytest_cache

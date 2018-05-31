@@ -53,7 +53,7 @@ void HttpRequest::addHeader(const char* name, size_t name_len, const char* val, 
     _headers.emplace(std::make_pair(std::string(name, name_len), std::string(val, val_len)));
 }
 
-// TODO: rewrite to std::optional introduced in GCC 7.x
+// @todo rewrite to std::optional introduced in GCC 7.x
 const std::string& HttpRequest::getHeader(const std::string& name, bool* found) const {
     static std::string empty("");
 

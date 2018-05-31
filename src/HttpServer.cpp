@@ -68,8 +68,6 @@ HttpWorker::HttpWorker(Socket& socket, HttpHandlerListItem* handlersList)
   , _handlersList(handlersList) {
 }
 
-// TODO: refactor, make it HttpRequest method simialar to serialize is a method
-// of HttpResponse
 void HttpWorker::_deserializeHttpRequest(Socket& socket, HttpRequest& req) {
     int mvector[32];
     char buf[256];
@@ -183,7 +181,6 @@ void HttpWorker::run() {
             _deserializeHttpRequest(_socket, req);
             handler = _chooseHandler(req);
         } catch(const HttpWorkerException& e) {
-            // TODO: don't report "Socket::read() - client closed connection"
             std::cerr << "HttpWorker::run(): " << e.what() << std::endl;
             handler = _httpBadRequestHandler;
         } catch(const std::runtime_error& e) {
@@ -200,7 +197,6 @@ void HttpWorker::run() {
 
             _socket.write(resp.serialize());
         } catch(const std::exception& e) {
-            // TODO: report internal server error
             std::cerr << "HttpWorker::run() terminated with an exception: " << e.what() << std::endl;
         }
     } while(isPersistent);

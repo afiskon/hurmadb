@@ -78,7 +78,7 @@
   curl -v -XGET localhost:8080/v1/kv/some_key
   ```
 
-## Get range values
+## Get range of values
 
   `GET /v1/kv/:key/:key`
 

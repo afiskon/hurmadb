@@ -1,6 +1,6 @@
 appdirs==1.4.3
 packaging==16.8
-py==1.4.33
+py==1.10.0
 pyparsing==2.2.0
 pytest==3.0.7
 requests==2.20.0

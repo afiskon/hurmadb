@@ -1,6 +1,6 @@
 # HurmaDB
 
-HurmaDB is a DBMS originally created in 2017 for educational purposes. Currently, this is a just-for-fun project. Feel free to extend the API, add Raft support, rewrite in Rust, etc...
+HurmaDB is a key-value storage with REST interface based on RocksDB. It was originally created in 2017 as a DBMS for educational purposes. Currently, this is a just-for-fun project.
 
 # How to build, test and run
 

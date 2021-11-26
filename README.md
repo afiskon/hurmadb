@@ -1,6 +1,6 @@
 # HurmaDB
 
-HurmaDB is a DBMS originally created for educational purposes. Currently, this is a just-for-fun project. Feel free to extend the API, add Raft support, etc...
+HurmaDB is a DBMS originally created for educational purposes. Currently, this is a just-for-fun project. Feel free to extend the API, add Raft support, rewrite in Rust, etc...
 
 # How to build, test and run
 

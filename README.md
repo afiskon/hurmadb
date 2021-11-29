@@ -7,8 +7,8 @@ HurmaDB is a key-value storage with REST interface based on RocksDB. It was orig
 Install all dependencies:
 
 ```
-sudo apt-get install cmake g++ libpcre3-dev librocksdb-dev python3-pip \
-  lcov wrk doxygen clang-format
+sudo apt install cmake g++ libpcre3-dev librocksdb-dev python3-pip \
+  lcov doxygen clang-format
 ```
 
 Install and configure virtualenvwrapper:
